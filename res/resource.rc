@@ -1,3 +1,4 @@
-aaaa ICON "wx/msw/std.ico"
+//aaaa ICON "wx/msw/std.ico"
+MIDILEARNICON ICON "res/midilearn.ico"
 
 #include "wx/msw/wx.rc"

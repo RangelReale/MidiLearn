@@ -27,7 +27,7 @@ bool MidiLearnApp::OnInit()
 
     MidiLearnFrame* frame = new MidiLearnFrame(0L, _("MIDILearn 0.4"));
 #ifdef __WXMSW__
-    frame->SetIcon(wxICON(aaaa)); // To Set App Icon
+    frame->SetIcon(wxICON(MIDILEARNICON)); // To Set App Icon
 #endif
     frame->Show();
     frame->Maximize(true);
