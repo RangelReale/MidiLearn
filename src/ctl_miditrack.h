@@ -303,6 +303,8 @@ public:
         ID_TEMPO_FASTER,
         ID_REW,
         ID_FF,
+        ID_TRANSPOSE_LESS,
+        ID_TRANSPOSE_MORE,
 
         ID_OPEN,
     };
@@ -339,6 +341,8 @@ protected:
     void OnFF(wxCommandEvent& event);
     void OnTempoSlower(wxCommandEvent& event);
     void OnTempoFaster(wxCommandEvent& event);
+    void OnTransposeLess(wxCommandEvent& event);
+    void OnTransposeMore(wxCommandEvent& event);
     void OnOpen(wxCommandEvent& event);
 
     void OnTimer(wxTimerEvent& event);

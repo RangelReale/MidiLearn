@@ -336,6 +336,7 @@ void ML_CTL_MidiTrack_Notes::OnPaint(wxPaintEvent& event)
         TSE3::Track *ins_track;
         TSE3::Part *ins_part;
         const TSE3::MidiEvent *ins_midievent;
+        TSE3::MidiEvent ins_midieventfilter;
         TSE3::Clock lastclock(0);
         bool first=true;
         int lastnote=-1;
@@ -348,6 +349,11 @@ void ML_CTL_MidiTrack_Notes::OnPaint(wxPaintEvent& event)
             for (unsigned int p=0; p<ins_part->phrase()->size(); p++)
             {
                 ins_midievent=&(*ins_part->phrase())[p];
+
+                // pass thru transport filter
+                ins_midieventfilter=song_get()->transport_get()->filter()->filter(*ins_midievent);
+                ins_midievent=&ins_midieventfilter;
+
                 if (ins_midievent->data.status==TSE3::MidiCommand_NoteOn)
                 {
                     if (ins_midievent->time >= playtime)
@@ -518,8 +524,10 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
         //float npos=GetClientRect().GetWidth()/(float)(nmax-nmin+1);
         // draw white notes
         int dx;
-        for (int i=notemin_; i<=notemax_; i++)
+        for (int i=notemin_+song_get()->transport_get()->filter()->transpose(); i<=notemax_+song_get()->transport_get()->filter()->transpose(); i++)
         {
+            if (i<0 || i>127) continue;
+
             wxString nds(TSE3::Util::numberToNote(i).c_str(), wxConvUTF8);
             //nds.Replace(wxT("-"), wxT(""), true);
             //nds.RemoveLast();
@@ -570,8 +578,10 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
         dc.SetBrush(*wxBLACK_BRUSH);
         //dc.SetPen(*wxTRANSPARENT_PEN);
         int bnw=note_width()/3;
-        for (int i=notemin_; i<=notemax_; i++)
+        for (int i=notemin_+song_get()->transport_get()->filter()->transpose(); i<=notemax_+song_get()->transport_get()->filter()->transpose(); i++)
         {
+            if (i<0 || i>127) continue;
+
             wxString nds(TSE3::Util::numberToNote(i).c_str(), wxConvUTF8);
             //nds.Replace(wxT("-"), wxT(""), true);
             //nds.RemoveLast();
@@ -637,6 +647,7 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
         TSE3::Track *ins_track;
         TSE3::Part *ins_part;
         const TSE3::MidiEvent *ins_midievent;
+        TSE3::MidiEvent ins_midieventfilter;
         TSE3::Clock lastclock(0);
         bool first=true;
         int lastnote=-1;
@@ -651,7 +662,15 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
             {
                 bool islastevent=(p==ins_part->phrase()->size());
 
-                if (!islastevent) ins_midievent=&(*ins_part->phrase())[p]; else ins_midievent=NULL;
+                if (!islastevent)
+                {
+                    ins_midievent=&(*ins_part->phrase())[p];
+                    // pass thru transport filter
+                    ins_midieventfilter=song_get()->transport_get()->filter()->filter(*ins_midievent);
+                    ins_midievent=&ins_midieventfilter;
+                }
+                else
+                    ins_midievent=NULL;
                 if (!ins_midievent || ins_midievent->data.status==TSE3::MidiCommand_NoteOn)
                 {
                     if (!ins_midievent || ins_midievent->time >= playtime)
@@ -757,7 +776,7 @@ bool ML_CTL_MidiTrack_PianoRoll::note_isblack(int note)
 int ML_CTL_MidiTrack_PianoRoll::note_pos(int note)
 {
     int nc=0;
-    for (int ctn=notemin_; ctn<note; ctn++)
+    for (int ctn=notemin_+song_get()->transport_get()->filter()->transpose(); ctn<note; ctn++)
         if (!note_isblack(ctn)) nc++;
 
     bool isblack=(note_isblack(note));
@@ -949,6 +968,8 @@ BEGIN_EVENT_TABLE(ML_CTL_MidiSong, wxPanel)
     EVT_BUTTON(ID_FF, ML_CTL_MidiSong::OnFF)
     EVT_BUTTON(ID_TEMPO_SLOWER, ML_CTL_MidiSong::OnTempoSlower)
     EVT_BUTTON(ID_TEMPO_FASTER, ML_CTL_MidiSong::OnTempoFaster)
+    EVT_BUTTON(ID_TRANSPOSE_LESS, ML_CTL_MidiSong::OnTransposeLess)
+    EVT_BUTTON(ID_TRANSPOSE_MORE, ML_CTL_MidiSong::OnTransposeMore)
     EVT_BUTTON(ID_OPEN, ML_CTL_MidiSong::OnOpen)
     EVT_TIMER(wxID_ANY, ML_CTL_MidiSong::OnTimer)
 END_EVENT_TABLE()
@@ -1016,6 +1037,12 @@ void ML_CTL_MidiSong::create_player(wxWindow *player)
 
     wxButton *tempofbtn=new wxButton(player, ID_TEMPO_FASTER, wxT("Tempo +"), wxDefaultPosition, wxSize(150, 80));
     s->Add(tempofbtn, 1, wxEXPAND|wxALL);
+
+    wxButton *transposelessbtn=new wxButton(player, ID_TRANSPOSE_LESS, wxT("Tranpose -"), wxDefaultPosition, wxSize(150, 80));
+    s->Add(transposelessbtn, 1, wxEXPAND|wxALL);
+
+    wxButton *transposemorebtn=new wxButton(player, ID_TRANSPOSE_MORE, wxT("Tranpose +"), wxDefaultPosition, wxSize(150, 80));
+    s->Add(transposemorebtn, 1, wxEXPAND|wxALL);
 
     wxButton *openbtn=new wxButton(player, ID_OPEN, wxT("Open"), wxDefaultPosition, wxSize(150, 80));
     s->Add(openbtn, 1, wxEXPAND|wxALL);
@@ -1112,6 +1139,7 @@ void ML_CTL_MidiSong::Play()
         //notesctrl_->track_set(-1);
         //pianorollctrl_->track_set(-1);
         transport_->filter()->setPort(ML_CTL_Control::control()->defaultport_get());
+        transport_->filter()->setTransposeIgnoreChannel(9); // do not transpose drum channel
         mixer_listen();
 
         transport_->play(song_, 0);
@@ -1417,6 +1445,27 @@ void ML_CTL_MidiSong::OnTempoFaster(wxCommandEvent& event)
         TSE3::Clock(0));
 
     if (wasplaying) Pause();
+}
+
+void ML_CTL_MidiSong::OnTransposeLess(wxCommandEvent& event)
+{
+    if (transport_)
+    {
+        ML_CTL_MidiSong_AutoSong as(this);
+        transport_->filter()->setTranspose(transport_->filter()->transpose()-1);
+
+        notesctrl_->Refresh();
+        pianorollctrl_->Refresh();
+    }
+}
+
+void ML_CTL_MidiSong::OnTransposeMore(wxCommandEvent& event)
+{
+    if (transport_)
+    {
+        ML_CTL_MidiSong_AutoSong as(this);
+        transport_->filter()->setTranspose(transport_->filter()->transpose()+1);
+    }
 }
 
 void ML_CTL_MidiSong::OnOpen(wxCommandEvent& event)
