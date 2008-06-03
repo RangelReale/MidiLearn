@@ -1,5 +1,6 @@
 #include "ctl_miditrack.h"
 #include <wx/dcbuffer.h>
+#include <wx/config.h>
 
 /////////////////////////////////
 // CLASS
@@ -852,8 +853,9 @@ void ML_CTL_MidiTrack_Lyrics::OnPaint(wxPaintEvent& event)
             {
                 // newline
                 curln.erase(0, 1);
-                //curln+=" ";
+                curln=" "+curln;
             }
+
             if (!findstart)
                 lyrics+=curln;
             else
@@ -1419,7 +1421,7 @@ void ML_CTL_MidiSong::OnTempoFaster(wxCommandEvent& event)
 
 void ML_CTL_MidiSong::OnOpen(wxCommandEvent& event)
 {
-    wxFileDialog d(this, wxT("Open MIDI file"), wxT("c:\\transfer\\karaoke"), wxEmptyString, wxT("Midi files|*.mid; *.kar"));
+    wxFileDialog d(this, wxT("Open MIDI file"), wxConfigBase::Get()->Read(wxT("defdir"), wxEmptyString), wxEmptyString, wxT("Midi files|*.mid; *.kar"));
     if (d.ShowModal()==wxID_OK)
     {
         Load(d.GetPath());
@@ -1463,7 +1465,7 @@ void ML_CTL_MidiSong::int_channel_volchanged(int channel)
 //      ML_CTL_Control
 /////////////////////////////////
 ML_CTL_Control::ML_CTL_Control() :
-    instruments_(), scheduler_(), defaultport_(2), notecolorinit_(false)
+    instruments_(), scheduler_(), defaultport_(0), notecolorinit_(false)
 {
     TSE3::Ins::CakewalkInstrumentFile cif("data\\Standard.ins");
 
