@@ -22,8 +22,13 @@ IMPLEMENT_APP(MidiLearnApp);
 
 bool MidiLearnApp::OnInit()
 {
-    MidiLearnFrame* frame = new MidiLearnFrame(0L, _("wxWidgets Application Template"));
+    SetAppName(wxT("MIDILearn 0.4"));
+    //SetVendorName("MIDILearn");
+
+    MidiLearnFrame* frame = new MidiLearnFrame(0L, _("MIDILearn 0.4"));
+#ifdef __WXMSW__
     frame->SetIcon(wxICON(aaaa)); // To Set App Icon
+#endif
     frame->Show();
     frame->Maximize(true);
 

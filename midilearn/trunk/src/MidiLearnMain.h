@@ -28,12 +28,14 @@ private:
         ID_MENU_QUIT = 1000,
         ID_MENU_ABOUT,
         ID_MENU_PORTS,
+        ID_MENU_DEF_DIR,
         ID_MENU_OPEN,
     };
     void OnClose(wxCloseEvent& event);
     void OnQuit(wxCommandEvent& event);
     void OnAbout(wxCommandEvent& event);
     void OnPorts(wxCommandEvent& event);
+    void OnDefDir(wxCommandEvent& event);
     void OnOpen(wxCommandEvent& event);
     DECLARE_EVENT_TABLE()
 
