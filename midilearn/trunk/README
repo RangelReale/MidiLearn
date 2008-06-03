@@ -1,2 +1,11 @@
 MIDILearn 0.4
 =============
+MidiLearn is a program to learn how to play music without needing to know how to read a score. Using common MID or KAR files, one of the tracks is muted and displayed in a custom piano roll view created to be easy and fast to read.
+
+At first run, select a MIDI output port and a song directory.
+
+To play, open a song, choose a track you want to play and press its "Notes" and "Enabled" button, and press Play to start.
+
+Author
+======
+Rangel Reale (rreale at bol dot com dot br)
