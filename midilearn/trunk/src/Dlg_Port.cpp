@@ -87,7 +87,10 @@ bool DLG_ML_Port::TransferDataFromWindow()
     for (int i=0; i<(int)ML_CTL_Control::control()->scheduler_get()->numPorts(); i++)
     {
         if (i==portsctrl->GetSelection())
-            port_=i;
+        {
+            port_=ML_CTL_Control::control()->scheduler_get()->portNumber(i);
+            break;
+        }
     }
 
     return true;

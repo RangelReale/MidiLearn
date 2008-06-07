@@ -59,7 +59,13 @@ MidiLearnFrame::MidiLearnFrame(wxFrame *frame, const wxString& title)
     if (wxConfigBase::Get()->Exists(wxT("port")))
         ML_CTL_Control::control()->defaultport_set(wxConfigBase::Get()->Read(wxT("port"), 0l));
 
+    wxBoxSizer *topsizer = new wxBoxSizer(wxVERTICAL);
+
     midisongctrl_=new ML_CTL_MidiSong(this, wxID_ANY);
+    topsizer->Add(midisongctrl_, 1, wxEXPAND|wxALL, 0);
+
+    SetSizer(topsizer);
+    topsizer->SetSizeHints(this);
 }
 
 
@@ -103,7 +109,7 @@ void MidiLearnFrame::OnDefDir(wxCommandEvent& event)
 void MidiLearnFrame::OnOpen(wxCommandEvent& event)
 {
     //midisongctrl_->Load(wxT("c:\\transfer\\karaoke\\Bonus\\Paralamas do Sucesso - Meu erro.kar"));
-    wxFileDialog d(this, wxT("Open MIDI file"), wxConfigBase::Get()->Read(wxT("defdir"), wxEmptyString), wxEmptyString, wxT("Midi files|*.mid; *.kar"));
+    wxFileDialog d(this, wxT("Open MIDI file"), wxConfigBase::Get()->Read(wxT("defdir"), wxEmptyString), wxEmptyString, wxT("Midi files|*.mid;*.kar"));
     if (d.ShowModal()==wxID_OK)
     {
         midisongctrl_->Load(d.GetPath());
