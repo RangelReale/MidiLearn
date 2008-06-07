@@ -348,6 +348,7 @@ protected:
     void OnTimer(wxTimerEvent& event);
 private:
     void track_load();
+    int track_event_count(int t);
 
     void tracks_allocate();
 

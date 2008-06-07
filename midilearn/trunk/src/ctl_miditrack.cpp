@@ -854,15 +854,26 @@ void ML_CTL_MidiTrack_Lyrics::OnPaint(wxPaintEvent& event)
         }
 
         TSE3::PlayableIterator *txti;
+        TSE3::Clock lastclock(0);
         txti=song_get()->song_get()->textTrack()->iterator(playtime-TSE3::Clock(TSE3::Clock::PPQN*8));
 
-        string curln, lyrics(""), lyricsn("");
-        bool findstart=false;
+        string curln, spln, lyrics(""), lyricsn("");
+        bool findstart=false, lastisnl=false, lastspace=false;
         int spos=0;
         while (txti->more())
         {
             curln=(*txti)->data.str;
 
+            spln="";
+            if (lastclock!=0)
+                for (int ctt=0; ctt<(int)(((*txti)->time-lastclock)/TSE3::Clock::PPQN); ctt++)
+                    spln+="  ";
+            lastclock=(*txti)->time;
+
+            if (!spln.empty() && !lastisnl && !lastspace)
+                spln="-"+spln;
+
+            lastisnl=false;
             if (curln.substr(0, 1)=="@")
             {
                 // title
@@ -873,7 +884,10 @@ void ML_CTL_MidiTrack_Lyrics::OnPaint(wxPaintEvent& event)
                 // newline
                 curln.erase(0, 1);
                 curln=" "+curln;
+                lastisnl=true;
             }
+            lastspace=(!curln.empty()) && curln[curln.size()-1]==' ';
+            curln=spln+curln;
 
             if (!findstart)
                 lyrics+=curln;
@@ -928,19 +942,27 @@ class ML_CTL_MidiSong_TCallback : public TSE3::TransportCallback
 {
 public:
     ML_CTL_MidiSong_TCallback(ML_CTL_MidiSong *song) :
-        TSE3::TransportCallback(), song_(song) {}
+        TSE3::TransportCallback(), song_(song), lastclock_() { memset(lastclock_, 0, sizeof(lastclock_)); }
 
-    virtual void Transport_MidiIn(TSE3::MidiCommand c) {}
-    virtual void Transport_MidiOut(TSE3::MidiCommand c);
+    virtual void Transport_MidiIn(TSE3::MidiEvent e) {}
+    virtual void Transport_MidiOut(TSE3::MidiEvent e);
 private:
     ML_CTL_MidiSong *song_;
+    TSE3::Clock lastclock_[16];
 };
 
-void ML_CTL_MidiSong_TCallback::Transport_MidiOut(TSE3::MidiCommand c)
+void ML_CTL_MidiSong_TCallback::Transport_MidiOut(TSE3::MidiEvent e)
 {
-    if (c.status==TSE3::MidiCommand_NoteOn)//|c.status==TSE3::MidiCommand_NoteOff)
-        song_->activity(c.channel);
-    else if (c.status==TSE3::MidiCommand_TSE_Meta && c.data1==TSE3::MidiCommand_TSE_Meta_Text)
+    if (e.data.status==TSE3::MidiCommand_NoteOn)//|c.status==TSE3::MidiCommand_NoteOff)
+    {
+        if (lastclock_[e.data.channel]!=e.time)
+        {
+            song_->activity(e.data.channel);
+            lastclock_[e.data.channel]=e.time;
+        }
+
+    }
+    else if (e.data.status==TSE3::MidiCommand_TSE_Meta && e.data.data1==TSE3::MidiCommand_TSE_Meta_Text)
         song_->lyrics_activity();
 }
 
@@ -1051,8 +1073,34 @@ void ML_CTL_MidiSong::create_player(wxWindow *player)
     player->SetSizer(s);
 }
 
+int ML_CTL_MidiSong::track_event_count(int t)
+{
+    int ret=0;
+
+    TSE3::Track *ins_track;
+    TSE3::Part *ins_part;
+    const TSE3::MidiEvent *ins_midievent;
+
+    ins_track=(*song_)[t];
+    for (unsigned int r=0; r<ins_track->size(); r++)
+    {
+        ins_part=(*ins_track)[r];
+        for (unsigned int p=0; p<ins_part->phrase()->size(); p++)
+        {
+            ins_midievent=&(*ins_part->phrase())[p];
+            if (ins_midievent->data.status==TSE3::MidiCommand_NoteOn)
+            {
+                ret++;
+            }
+        }
+    }
+    return ret;
+}
+
 void ML_CTL_MidiSong::create_track(int tracknum)
 {
+    if (track_event_count(tracknum)==0) return;
+
     ML_CTL_MidiTrack *t=new ML_CTL_MidiTrack(this, ID_TRACKS+tracknum, wxDefaultPosition, wxSize(200, 200));
 
     tracklist_.push_back(t);
@@ -1344,7 +1392,7 @@ void ML_CTL_MidiSong::activity(int channel)
 
     //wxLogDebug(wxString::Format(wxT("Ch %d"), channel));
 
-    for (unsigned int i=0; i<song_->size(); i++)
+    for (unsigned int i=0; i<tracklist_.size(); i++)
     {
         //t=(ML_CTL_MidiTrack *)FindWindow(ID_TRACKS+i);
         t=tracklist_[i];
@@ -1451,8 +1499,10 @@ void ML_CTL_MidiSong::OnTransposeLess(wxCommandEvent& event)
 {
     if (transport_)
     {
-        ML_CTL_MidiSong_AutoSong as(this);
-        transport_->filter()->setTranspose(transport_->filter()->transpose()-1);
+        {
+            ML_CTL_MidiSong_AutoSong as(this);
+            transport_->filter()->setTranspose(transport_->filter()->transpose()-1);
+        }
 
         notesctrl_->Refresh();
         pianorollctrl_->Refresh();
@@ -1463,8 +1513,12 @@ void ML_CTL_MidiSong::OnTransposeMore(wxCommandEvent& event)
 {
     if (transport_)
     {
-        ML_CTL_MidiSong_AutoSong as(this);
-        transport_->filter()->setTranspose(transport_->filter()->transpose()+1);
+        {
+            ML_CTL_MidiSong_AutoSong as(this);
+            transport_->filter()->setTranspose(transport_->filter()->transpose()+1);
+        }
+        notesctrl_->Refresh();
+        pianorollctrl_->Refresh();
     }
 }
 
