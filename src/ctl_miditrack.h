@@ -27,6 +27,8 @@
 #ifdef WIN32
 #include "tse3/plt/Win32.h"
 #include <windows.h>
+#elif defined(unix)
+#include "tse3/plt/Alsa.h"
 #endif
 #include "tse3/Playable.h"
 #include "tse3/Song.h"
@@ -422,6 +424,8 @@ private:
     vector<string> instruments_;
 #ifdef WIN32
     TSE3::Plt::Win32MidiScheduler scheduler_;
+#elif defined(unix)
+    TSE3::Plt::AlsaMidiScheduler scheduler_;
 #endif
     int defaultport_;
 

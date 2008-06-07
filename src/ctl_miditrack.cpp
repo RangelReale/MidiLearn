@@ -62,7 +62,7 @@ ML_CTL_MidiTrack::ML_CTL_MidiTrack(wxWindow* parent, wxWindowID id, const wxPoin
     channel_(-1), lastvol_(-1), midiprogram_(-1)
 {
     wxFont f=GetFont();
-    f.SetWeight(wxFONTWEIGHT_BOLD);
+    f.SetPointSize(8);
     SetFont(f);
 
 
@@ -74,24 +74,22 @@ ML_CTL_MidiTrack::ML_CTL_MidiTrack(wxWindow* parent, wxWindowID id, const wxPoin
     topsizer->Add(playsizer, 1, wxEXPAND|wxALL, 0);
 
     //playsizer->AddStretchSpacer(1);
-
-    wxButton *vollowctrl = new wxButton(this, ID_VOL_LOW, wxT("Vol. Low"), wxDefaultPosition, wxSize(-1, -1));
+    wxButton *vollowctrl = new wxButton(this, ID_VOL_LOW, wxT("Vol. Low"), wxDefaultPosition, wxSize(-1, -1), wxBU_EXACTFIT);
     playsizer->Add(vollowctrl, 1, wxEXPAND|wxALL, 1);
 
-    wxButton *volmedctrl = new wxButton(this, ID_VOL_MED, wxT("Vol. Med"), wxDefaultPosition, wxSize(-1, -1));
+    wxButton *volmedctrl = new wxButton(this, ID_VOL_MED, wxT("Vol. Med"), wxDefaultPosition, wxSize(-1, -1), wxBU_EXACTFIT);
     playsizer->Add(volmedctrl, 1, wxEXPAND|wxALL, 1);
 
-    wxButton *volnormalctrl = new wxButton(this, ID_VOL_NORMAL, wxT("Vol. Norm"), wxDefaultPosition, wxSize(-1, -1));
+    wxButton *volnormalctrl = new wxButton(this, ID_VOL_NORMAL, wxT("Vol. Norm"), wxDefaultPosition, wxSize(-1, -1), wxBU_EXACTFIT);
     playsizer->Add(volnormalctrl, 1, wxEXPAND|wxALL, 1);
 
-
-    wxButton *soloctrl = new wxButton(this, ID_SOLO, wxT("Solo"), wxDefaultPosition, wxSize(-1, -1));
+    wxButton *soloctrl = new wxButton(this, ID_SOLO, wxT("Solo"), wxDefaultPosition, wxSize(-1, -1), wxBU_EXACTFIT);
     playsizer->Add(soloctrl, 1, wxEXPAND|wxALL, 1);
 
-    wxButton *enabledctrl = new wxButton(this, ID_ENABLED, wxT("Enabled"), wxDefaultPosition, wxSize(-1, -1));
+    wxButton *enabledctrl = new wxButton(this, ID_ENABLED, wxT("Enabled"), wxDefaultPosition, wxSize(-1, -1), wxBU_EXACTFIT);
     playsizer->Add(enabledctrl, 1, wxEXPAND|wxALL, 1);
 
-    wxButton *shownotesctrl = new wxButton(this, ID_SHOWNOTES, wxT("Notes"), wxDefaultPosition, wxSize(-1, -1));
+    wxButton *shownotesctrl = new wxButton(this, ID_SHOWNOTES, wxT("Notes"), wxDefaultPosition, wxSize(-1, -1), wxBU_EXACTFIT);
     playsizer->Add(shownotesctrl, 1, wxEXPAND|wxALL, 1);
 
     // ACTIVITY SIZER
@@ -246,6 +244,10 @@ void ML_CTL_MidiTrack::OnPaint(wxPaintEvent& event)
 {
     wxPaintDC dc(this);
 
+    wxFont f=GetFont();
+    f.SetWeight(wxFONTWEIGHT_BOLD);
+    dc.SetFont(f);
+
     const wxBrush *bgb;
     if (enabled_get())
     {
@@ -266,7 +268,7 @@ void ML_CTL_MidiTrack::OnPaint(wxPaintEvent& event)
     dc.SetPen(*wxTRANSPARENT_PEN);
     dc.DrawRectangle(GetClientRect());
 
-    dc.SetFont(GetFont());
+    //dc.SetFont(GetFont());
     dc.SetTextForeground(*wxBLACK);
     dc.DrawText(wxString::Format(wxT("(%d) %s [TR %d CH %d]"), midiprogram_+1,
         wxString(ML_CTL_Control::control()->instrument_get(midiprogram_).c_str(), wxConvUTF8).c_str(),
@@ -311,7 +313,7 @@ void ML_CTL_MidiTrack_Notes::OnEraseBackground(wxEraseEvent &event)
 
 void ML_CTL_MidiTrack_Notes::OnPaint(wxPaintEvent& event)
 {
-    wxBufferedPaintDC dc(this);
+    wxAutoBufferedPaintDC dc(this);
     //wxPaintDC dc(this);
 
     dc.SetBrush(*wxWHITE_BRUSH);
@@ -497,7 +499,7 @@ void ML_CTL_MidiTrack_PianoRoll::OnEraseBackground(wxEraseEvent &event)
 
 void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
 {
-    wxBufferedPaintDC dc(this);
+    wxAutoBufferedPaintDC dc(this);
     //wxPaintDC dc(this);
 
     dc.SetBrush(*wxWHITE_BRUSH);
@@ -834,7 +836,7 @@ void ML_CTL_MidiTrack_Lyrics::OnEraseBackground(wxEraseEvent &event)
 
 void ML_CTL_MidiTrack_Lyrics::OnPaint(wxPaintEvent& event)
 {
-    wxBufferedPaintDC dc(this);
+    wxAutoBufferedPaintDC dc(this);
     //wxPaintDC dc(this);
 
     dc.SetBrush(*wxWHITE_BRUSH);
@@ -963,7 +965,9 @@ void ML_CTL_MidiSong_TCallback::Transport_MidiOut(TSE3::MidiEvent e)
 
     }
     else if (e.data.status==TSE3::MidiCommand_TSE_Meta && e.data.data1==TSE3::MidiCommand_TSE_Meta_Text)
+    {
         song_->lyrics_activity();
+    }
 }
 
 /////////////////////////////////
@@ -1038,35 +1042,35 @@ void ML_CTL_MidiSong::create_player(wxWindow *player)
 {
     wxBoxSizer *s=new wxBoxSizer(wxHORIZONTAL);
 
-    wxButton *playbtn=new wxButton(player, ID_PLAY, wxT("Play"), wxDefaultPosition, wxSize(150, 80));
+    wxButton *playbtn=new wxButton(player, ID_PLAY, wxT("Play"), wxDefaultPosition, wxSize(-1, 80), wxBU_EXACTFIT);
     s->Add(playbtn, 1, wxEXPAND|wxALL);
 
-    wxButton *stopbtn=new wxButton(player, ID_STOP, wxT("Stop"), wxDefaultPosition, wxSize(150, 80));
+    wxButton *stopbtn=new wxButton(player, ID_STOP, wxT("Stop"), wxDefaultPosition, wxSize(-1, 80), wxBU_EXACTFIT);
     s->Add(stopbtn, 1, wxEXPAND|wxALL);
 
-    wxButton *pausebtn=new wxButton(player, ID_PAUSE, wxT("Pause"), wxDefaultPosition, wxSize(150, 80));
+    wxButton *pausebtn=new wxButton(player, ID_PAUSE, wxT("Pause"), wxDefaultPosition, wxSize(-1, 80), wxBU_EXACTFIT);
     s->Add(pausebtn, 1, wxEXPAND|wxALL);
 
-    wxButton *rewbtn=new wxButton(player, ID_REW, wxT("Rew"), wxDefaultPosition, wxSize(150, 80));
+    wxButton *rewbtn=new wxButton(player, ID_REW, wxT("Rew"), wxDefaultPosition, wxSize(-1, 80), wxBU_EXACTFIT);
     s->Add(rewbtn, 1, wxEXPAND|wxALL);
 
-    wxButton *ffbtn=new wxButton(player, ID_FF, wxT("FF"), wxDefaultPosition, wxSize(150, 80));
+    wxButton *ffbtn=new wxButton(player, ID_FF, wxT("FF"), wxDefaultPosition, wxSize(-1, 80), wxBU_EXACTFIT);
     s->Add(ffbtn, 1, wxEXPAND|wxALL);
 
 
-    wxButton *tempobtn=new wxButton(player, ID_TEMPO_SLOWER, wxT("Tempo -"), wxDefaultPosition, wxSize(150, 80));
+    wxButton *tempobtn=new wxButton(player, ID_TEMPO_SLOWER, wxT("Tempo -"), wxDefaultPosition, wxSize(-1, 80), wxBU_EXACTFIT);
     s->Add(tempobtn, 1, wxEXPAND|wxALL);
 
-    wxButton *tempofbtn=new wxButton(player, ID_TEMPO_FASTER, wxT("Tempo +"), wxDefaultPosition, wxSize(150, 80));
+    wxButton *tempofbtn=new wxButton(player, ID_TEMPO_FASTER, wxT("Tempo +"), wxDefaultPosition, wxSize(-1, 80), wxBU_EXACTFIT);
     s->Add(tempofbtn, 1, wxEXPAND|wxALL);
 
-    wxButton *transposelessbtn=new wxButton(player, ID_TRANSPOSE_LESS, wxT("Tranpose -"), wxDefaultPosition, wxSize(150, 80));
+    wxButton *transposelessbtn=new wxButton(player, ID_TRANSPOSE_LESS, wxT("Tranpose -"), wxDefaultPosition, wxSize(-1, 80), wxBU_EXACTFIT);
     s->Add(transposelessbtn, 1, wxEXPAND|wxALL);
 
-    wxButton *transposemorebtn=new wxButton(player, ID_TRANSPOSE_MORE, wxT("Tranpose +"), wxDefaultPosition, wxSize(150, 80));
+    wxButton *transposemorebtn=new wxButton(player, ID_TRANSPOSE_MORE, wxT("Tranpose +"), wxDefaultPosition, wxSize(-1, 80), wxBU_EXACTFIT);
     s->Add(transposemorebtn, 1, wxEXPAND|wxALL);
 
-    wxButton *openbtn=new wxButton(player, ID_OPEN, wxT("Open"), wxDefaultPosition, wxSize(150, 80));
+    wxButton *openbtn=new wxButton(player, ID_OPEN, wxT("Open"), wxDefaultPosition, wxSize(-1, 80), wxBU_EXACTFIT);
     s->Add(openbtn, 1, wxEXPAND|wxALL);
 
 
@@ -1101,7 +1105,7 @@ void ML_CTL_MidiSong::create_track(int tracknum)
 {
     if (track_event_count(tracknum)==0) return;
 
-    ML_CTL_MidiTrack *t=new ML_CTL_MidiTrack(this, ID_TRACKS+tracknum, wxDefaultPosition, wxSize(200, 200));
+    ML_CTL_MidiTrack *t=new ML_CTL_MidiTrack(this, ID_TRACKS+tracknum, wxDefaultPosition, wxSize(-1, -1));
 
     tracklist_.push_back(t);
 
@@ -1389,6 +1393,10 @@ void ML_CTL_MidiSong::songget_end()
 void ML_CTL_MidiSong::activity(int channel)
 {
     ML_CTL_MidiTrack *t;
+/*
+    if (!::wxIsMainThread())
+        wxMutexGuiEnter();
+*/
 
     //wxLogDebug(wxString::Format(wxT("Ch %d"), channel));
 
@@ -1410,12 +1418,24 @@ void ML_CTL_MidiSong::activity(int channel)
             return;
         }
     }
+/*
+    if (!::wxIsMainThread())
+        wxMutexGuiLeave();
+*/
     //wxLogDebug(wxString::Format(wxT("Ch %d NOT FOUND"), channel));
 }
 
 void ML_CTL_MidiSong::lyrics_activity()
 {
+/*
+    if (!::wxIsMainThread())
+        wxMutexGuiEnter();
+*/
     lyricsctrl_->Refresh();
+/*
+    if (!::wxIsMainThread())
+        wxMutexGuiLeave();
+*/
 }
 
 void ML_CTL_MidiSong::shownotes(int track)
@@ -1428,7 +1448,7 @@ TSE3::MixerPort *ML_CTL_MidiSong::mixer_get()
 {
     if (!mixer_) return NULL;
     if (transport_->filter()->port()<0) return NULL;
-    return (*mixer_)[transport_->filter()->port()];
+    return (*mixer_)[ML_CTL_Control::control()->scheduler_get()->numberToIndex(transport_->filter()->port())];
 }
 
 void ML_CTL_MidiSong::mixer_listen()
@@ -1524,7 +1544,7 @@ void ML_CTL_MidiSong::OnTransposeMore(wxCommandEvent& event)
 
 void ML_CTL_MidiSong::OnOpen(wxCommandEvent& event)
 {
-    wxFileDialog d(this, wxT("Open MIDI file"), wxConfigBase::Get()->Read(wxT("defdir"), wxEmptyString), wxEmptyString, wxT("Midi files|*.mid; *.kar"));
+    wxFileDialog d(this, wxT("Open MIDI file"), wxConfigBase::Get()->Read(wxT("defdir"), wxEmptyString), wxEmptyString, wxT("Midi files|*.mid;*.kar"));
     if (d.ShowModal()==wxID_OK)
     {
         Load(d.GetPath());
@@ -1570,7 +1590,7 @@ void ML_CTL_MidiSong::int_channel_volchanged(int channel)
 ML_CTL_Control::ML_CTL_Control() :
     instruments_(), scheduler_(), defaultport_(0), notecolorinit_(false)
 {
-    TSE3::Ins::CakewalkInstrumentFile cif("data\\Standard.ins");
+    TSE3::Ins::CakewalkInstrumentFile cif("data/Standard.ins");
 
     TSE3::Ins::Instrument *inst=cif.instrument("General MIDI");
     for (unsigned int in=0; in<128; in++)
