@@ -650,7 +650,7 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
         TSE3::Part *ins_part;
         const TSE3::MidiEvent *ins_midievent;
         TSE3::MidiEvent ins_midieventfilter;
-        TSE3::Clock lastclock(0);
+        TSE3::Clock lastclock(0), lastendclock(0);
         bool first=true;
         int lastnote=-1;
         wxBrush *notebrush;
@@ -681,12 +681,18 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
                         {
 
                             int chpos=(GetClientSize().GetHeight()-
-                                (((lastclock-playtime)/(float)TSE3::Clock::PPQN)*30))
+                                (((float)(lastclock-playtime)/(float)TSE3::Clock::PPQN)*30.0))
                                 - 15;
+                            int chendpos=(GetClientSize().GetHeight()-
+                                (((float)(lastendclock-playtime)/(float)TSE3::Clock::PPQN)*30.0))
+                                - 15;
+                            if (chpos-chendpos<15) chendpos=chpos-15;
+
                             for (vector<int>::const_iterator di=draw_notes.begin(); di!=draw_notes.end(); di++)
                             {
                                 //int cnpos=(int)(npos*(*di-nmin));
                                 int cnpos=note_pos(*di);
+                                int cnheight=chendpos;
 
 /*
                                 if (note_isblack(*di))
@@ -703,7 +709,7 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
 */
                                 dc.SetPen(*wxThePenList->FindOrCreatePen(*wxBLACK, (note_isblack(*di)?2:1), wxSOLID));
                                 dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(ML_CTL_Control::control()->notecolor_get(*di%12)));
-                                dc.DrawRectangle(wxRect(cnpos, chpos-15, note_width(), 15));
+                                dc.DrawRectangle(wxRect(cnpos, chendpos, note_width(), chpos-chendpos));
 
                                 wxString nds(TSE3::Util::numberToNote(*di).c_str(), wxConvUTF8);
 
@@ -756,7 +762,10 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
                         //dpos+=dw;
                     }
                     if (ins_midievent)
+                    {
                         lastclock=ins_midievent->time;
+                        lastendclock=ins_midievent->offTime;
+                    }
                 }
             }
         }
