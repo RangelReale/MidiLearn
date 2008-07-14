@@ -1112,7 +1112,7 @@ int ML_CTL_MidiSong::track_event_count(int t)
 
 void ML_CTL_MidiSong::create_track(int tracknum)
 {
-    if (track_event_count(tracknum)==0) return;
+    if (track_event_count(tracknum)<30) return;
 
     ML_CTL_MidiTrack *t=new ML_CTL_MidiTrack(this, ID_TRACKS+tracknum, wxDefaultPosition, wxSize(-1, -1));
 
