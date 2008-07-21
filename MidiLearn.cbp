@@ -21,11 +21,8 @@
 					<Add directory="$(#wx)\lib\gcc_lib\mswu" />
 				</ResourceCompiler>
 				<Linker>
-					<Add library="libwxmsw28ud.a" />
-					<Add library="libwxpng.a" />
-					<Add library="libwxjpeg.a" />
-					<Add library="libwxtiff.a" />
-					<Add library="libwxzlib.a" />
+					<Add library="wx_mswud_core-2.8" />
+					<Add library="wx_baseud-2.8" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -43,11 +40,8 @@
 				</ResourceCompiler>
 				<Linker>
 					<Add option="-s" />
-					<Add library="libwxmsw28u.a" />
-					<Add library="libwxpng.a" />
-					<Add library="libwxjpeg.a" />
-					<Add library="libwxtiff.a" />
-					<Add library="libwxzlib.a" />
+					<Add library="wx_mswu_core-2.8" />
+					<Add library="wx_baseu-2.8" />
 				</Linker>
 			</Target>
 		</Build>
