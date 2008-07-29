@@ -405,14 +405,23 @@ private:
 class ML_CTL_Control
 {
 public:
+    enum notedisplay_t {
+        ND_LETTER,
+        ND_NAME
+    };
+
     ML_CTL_Control();
     ~ML_CTL_Control();
 
     TSE3::MidiScheduler *scheduler_get() { return &scheduler_; }
     string instrument_get(int index);
+    string note_get(int note);
 
     int defaultport_get() { return defaultport_; }
     void defaultport_set(int dp) { defaultport_=dp; }
+
+    notedisplay_t notedisplay_get() { return notedisplay_; }
+    void notedisplay_set(notedisplay_t n) { notedisplay_=n; }
 
     wxColor notecolor_get(unsigned short note) { if (!notecolorinit_) init_notecolors(); return notecolor_[note]; }
 
@@ -420,6 +429,7 @@ public:
     static ML_CTL_Control *control();
 private:
     void init_notecolors();
+    string numberToNoteName(int note);
 
     vector<string> instruments_;
 #ifdef WIN32
@@ -431,6 +441,7 @@ private:
 
     bool notecolorinit_;
     wxColor notecolor_[12];
+    notedisplay_t notedisplay_;
 };
 
 #endif //H__CTL_MIDITRACK__H

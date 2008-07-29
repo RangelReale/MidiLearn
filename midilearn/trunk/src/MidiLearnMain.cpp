@@ -28,6 +28,7 @@ BEGIN_EVENT_TABLE(MidiLearnFrame, wxFrame)
     EVT_MENU(ID_MENU_PORTS, MidiLearnFrame::OnPorts)
     EVT_MENU(ID_MENU_DEF_DIR, MidiLearnFrame::OnDefDir)
     EVT_MENU(ID_MENU_OPEN, MidiLearnFrame::OnOpen)
+    EVT_MENU(ID_MENU_NOTENAME, MidiLearnFrame::OnNoteName)
 END_EVENT_TABLE()
 
 MidiLearnFrame::MidiLearnFrame(wxFrame *frame, const wxString& title)
@@ -44,6 +45,7 @@ MidiLearnFrame::MidiLearnFrame(wxFrame *frame, const wxString& title)
     fileMenu->AppendSeparator();
     fileMenu->Append(ID_MENU_PORTS, _("&Ports\tAlt-P"), _("MIDI ports"));
     fileMenu->Append(ID_MENU_DEF_DIR, _("&Default song path"), _("Default song path"));
+    fileMenu->AppendCheckItem(ID_MENU_NOTENAME, _("Show note &name"), _("Show note name"));
     fileMenu->AppendSeparator();
     fileMenu->Append(ID_MENU_QUIT, _("&Quit\tAlt-F4"), _("Quit the application"));
     mbar->Append(fileMenu, _("&File"));
@@ -116,4 +118,10 @@ void MidiLearnFrame::OnOpen(wxCommandEvent& event)
 
         //file_load(d.GetPath());
     }
+}
+
+void MidiLearnFrame::OnNoteName(wxCommandEvent& event)
+{
+    ML_CTL_Control::control()->notedisplay_set(event.IsChecked()?ML_CTL_Control::ND_NAME:ML_CTL_Control::ND_LETTER);
+    midisongctrl_->Refresh();
 }

@@ -30,6 +30,7 @@ private:
         ID_MENU_PORTS,
         ID_MENU_DEF_DIR,
         ID_MENU_OPEN,
+        ID_MENU_NOTENAME
     };
     void OnClose(wxCloseEvent& event);
     void OnQuit(wxCommandEvent& event);
@@ -37,6 +38,7 @@ private:
     void OnPorts(wxCommandEvent& event);
     void OnDefDir(wxCommandEvent& event);
     void OnOpen(wxCommandEvent& event);
+    void OnNoteName(wxCommandEvent& event);
     DECLARE_EVENT_TABLE()
 
     ML_CTL_MidiSong *midisongctrl_;

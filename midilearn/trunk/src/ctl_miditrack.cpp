@@ -1,6 +1,7 @@
 #include "ctl_miditrack.h"
 #include <wx/dcbuffer.h>
 #include <wx/config.h>
+#include <sstream>
 
 /////////////////////////////////
 // CLASS
@@ -407,7 +408,8 @@ void ML_CTL_MidiTrack_Notes::OnPaint(wxPaintEvent& event)
                             dhei+=dh;
                         }
 
-                        wxString n=wxString(TSE3::Util::numberToNote(ins_midievent->data.data1).c_str(), wxConvUTF8);
+                        //wxString n=wxString(TSE3::Util::numberToNote(ins_midievent->data.data1).c_str(), wxConvUTF8);
+                        wxString n=wxString(ML_CTL_Control::control()->note_get(ins_midievent->data.data1).c_str(), wxConvUTF8);
                         //dc.DrawText(n, dpos, dhei);
                         ML_CTL_Control::control()->DrawTextOutline(dc, n, dpos, dhei, 1);
                         dc.GetTextExtent(n, &dw, &dh);
@@ -530,7 +532,7 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
         {
             if (i<0 || i>127) continue;
 
-            wxString nds(TSE3::Util::numberToNote(i).c_str(), wxConvUTF8);
+            wxString nds(ML_CTL_Control::control()->note_get(i).c_str(), wxConvUTF8);
             //nds.Replace(wxT("-"), wxT(""), true);
             //nds.RemoveLast();
 
@@ -584,7 +586,7 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
         {
             if (i<0 || i>127) continue;
 
-            wxString nds(TSE3::Util::numberToNote(i).c_str(), wxConvUTF8);
+            wxString nds(ML_CTL_Control::control()->note_get(i).c_str(), wxConvUTF8);
             //nds.Replace(wxT("-"), wxT(""), true);
             //nds.RemoveLast();
 
@@ -711,7 +713,7 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
                                 dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(ML_CTL_Control::control()->notecolor_get(*di%12)));
                                 dc.DrawRectangle(wxRect(cnpos, chendpos, note_width(), chpos-chendpos));
 
-                                wxString nds(TSE3::Util::numberToNote(*di).c_str(), wxConvUTF8);
+                                wxString nds(ML_CTL_Control::control()->note_get(*di).c_str(), wxConvUTF8);
 
                                 dc.SetFont(f);
 
@@ -753,7 +755,7 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
                             draw_notes.push_back(ins_midievent->data.data1);
 
 
-                        //wxString n=wxString(TSE3::Util::numberToNote(ins_midievent->data.data1).c_str(), wxConvUTF8);
+                        //wxString n=wxString(ML_CTL_Control::control()->note_get(ins_midievent->data.data1).c_str(), wxConvUTF8);
                         //dc.DrawText(n, dpos, dhei);
                         //dc.GetTextExtent(n, &dw, &dh);
 
@@ -1597,7 +1599,8 @@ void ML_CTL_MidiSong::int_channel_volchanged(int channel)
 //      ML_CTL_Control
 /////////////////////////////////
 ML_CTL_Control::ML_CTL_Control() :
-    instruments_(), scheduler_(), defaultport_(0), notecolorinit_(false)
+    instruments_(), scheduler_(), defaultport_(0), notecolorinit_(false),
+    notedisplay_(ND_LETTER)
 {
     TSE3::Ins::CakewalkInstrumentFile cif("data/Standard.ins");
 
@@ -1617,6 +1620,48 @@ string ML_CTL_Control::instrument_get(int index)
     if (index>=0 && index<128)
         return instruments_[index];
     return "Unknown instrument";
+}
+
+string ML_CTL_Control::note_get(int note)
+{
+    if (notedisplay_==ND_LETTER)
+        return TSE3::Util::numberToNote(note);
+    return numberToNoteName(note);
+}
+
+string ML_CTL_Control::numberToNoteName(int note)
+{
+    std::string dest;
+
+    if (note >= 0 && note <= 127)
+    {
+
+        switch (note%12)
+        {
+            case 0:  dest.append("Do");  break;
+            case 1:  dest.append("Do#"); break;
+            case 2:  dest.append("Re");  break;
+            case 3:  dest.append("Re#"); break;
+            case 4:  dest.append("Mi");  break;
+            case 5:  dest.append("Fa");  break;
+            case 6:  dest.append("Fa#"); break;
+            case 7:  dest.append("Sol");  break;
+            case 8:  dest.append("Sol#"); break;
+            case 9:  dest.append("La");  break;
+            case 10: dest.append("La#"); break;
+            case 11: dest.append("Si");  break;
+        }
+
+        dest.append("-");
+
+        {
+            std::ostringstream o;
+            o << note/12;
+            dest.append(o.str());
+        }
+    }
+
+    return dest;
 }
 
 ML_CTL_Control control_root;
