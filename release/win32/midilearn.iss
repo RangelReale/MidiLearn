@@ -1,10 +1,10 @@
 [Setup]
 AppName=MIDILearn
-AppVerName=MIDILearn 0.4
+AppVerName=MIDILearn 0.5
 DefaultDirName={pf}\MIDILearn
 DefaultGroupName=MIDILearn
 SourceDir=..\..
-OutputBaseFilename=midilearn_0.4_win32_install
+OutputBaseFilename=midilearn_0.5_win32_install
 OutputDir=release\win32
 
 [Dirs]
