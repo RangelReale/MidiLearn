@@ -20,6 +20,7 @@
 #include "MidiLearnMain.h"
 
 #include "Dlg_Port.h"
+#include "Dlg_Search.h"
 
 BEGIN_EVENT_TABLE(MidiLearnFrame, wxFrame)
     EVT_CLOSE(MidiLearnFrame::OnClose)
@@ -27,6 +28,7 @@ BEGIN_EVENT_TABLE(MidiLearnFrame, wxFrame)
     EVT_MENU(ID_MENU_ABOUT, MidiLearnFrame::OnAbout)
     EVT_MENU(ID_MENU_PORTS, MidiLearnFrame::OnPorts)
     EVT_MENU(ID_MENU_DEF_DIR, MidiLearnFrame::OnDefDir)
+    EVT_MENU(ID_MENU_SEARCH, MidiLearnFrame::OnSearch)
     EVT_MENU(ID_MENU_OPEN, MidiLearnFrame::OnOpen)
     EVT_MENU(ID_MENU_NOTENAME, MidiLearnFrame::OnNoteName)
 END_EVENT_TABLE()
@@ -42,6 +44,7 @@ MidiLearnFrame::MidiLearnFrame(wxFrame *frame, const wxString& title)
     wxMenuBar* mbar = new wxMenuBar();
     wxMenu* fileMenu = new wxMenu(_T(""));
     fileMenu->Append(ID_MENU_OPEN, _("&Open\tCtrl-O"), _("Open"));
+    fileMenu->Append(ID_MENU_SEARCH, _("&Search\tCtrl-S"), _("Search"));
     fileMenu->AppendSeparator();
     fileMenu->Append(ID_MENU_PORTS, _("&Ports\tAlt-P"), _("MIDI ports"));
     fileMenu->Append(ID_MENU_DEF_DIR, _("&Default song path"), _("Default song path"));
@@ -108,13 +111,21 @@ void MidiLearnFrame::OnDefDir(wxCommandEvent& event)
         wxConfigBase::Get()->Write(wxT("defdir"), d.GetPath());
 }
 
+void MidiLearnFrame::OnSearch(wxCommandEvent& event)
+{
+    DLG_ML_Search d(this, wxID_ANY);
+    if (d.ShowModal()==wxID_OK)
+    {
+        midisongctrl_->Load(d.GetFilename());
+    }
+}
+
 void MidiLearnFrame::OnOpen(wxCommandEvent& event)
 {
     //midisongctrl_->Load(wxT("c:\\transfer\\karaoke\\Bonus\\Paralamas do Sucesso - Meu erro.kar"));
     wxFileDialog d(this, wxT("Open MIDI file"), wxConfigBase::Get()->Read(wxT("defdir"), wxEmptyString), wxEmptyString, wxT("Midi files|*.mid;*.kar"));
     if (d.ShowModal()==wxID_OK)
     {
-        midisongctrl_->Load(d.GetPath());
 
         //file_load(d.GetPath());
     }

@@ -83,6 +83,8 @@
 		</Unit>
 		<Unit filename="src\Dlg_Port.cpp" />
 		<Unit filename="src\Dlg_Port.h" />
+		<Unit filename="src\Dlg_Search.cpp" />
+		<Unit filename="src\Dlg_Search.h" />
 		<Unit filename="src\MidiLearnApp.cpp" />
 		<Unit filename="src\MidiLearnApp.h" />
 		<Unit filename="src\MidiLearnMain.cpp" />
