@@ -1,0 +1,11 @@
+body { font-family: verdana; font-size: 12px; background-color: #505050; color: #ffffff; }
+
+table { font-family: verdana; font-size: 12px; color: #ffffff; }
+
+.maintitle { background-color: #000000; font-size: 16px; color: #ffffff; padding: 15px 15px 15px 15px; font-weight: bold; }
+.title { background-color: #000000; font-size: 12px; color: #ffffff; padding: 10px 10px 10px 10px; font-weight: bold; }
+
+a:link { color: #ffffff; }
+a:active { color: #ffffff; }
+a:visited { color: #ffffff; }
+a:hover { color: #ffffff; }
