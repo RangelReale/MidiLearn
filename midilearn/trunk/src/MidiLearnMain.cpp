@@ -37,7 +37,7 @@ MidiLearnFrame::MidiLearnFrame(wxFrame *frame, const wxString& title)
     : wxFrame(frame, -1, title)
 {
 #ifdef __WXDEBUG__
-    //(void) new wxLogWindow(this, wxT("log"));
+    (void) new wxLogWindow(this, wxT("log"));
 #endif //__WXDEBUG__
 
 
