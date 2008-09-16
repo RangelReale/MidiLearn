@@ -327,6 +327,7 @@ void ML_CTL_MidiTrack_Notes::OnPaint(wxPaintEvent& event)
         {
             ML_CTL_MidiSong_AutoSong as(song_get());
             playtime=song_get()->transport_get()->scheduler()->clock();
+			//wxLogDebug(wxT("Clock: %d"), playtime.beat());
         }
 
         //dc.SetTextForeground(*wxBLACK);
@@ -968,7 +969,11 @@ void ML_CTL_MidiSong_TCallback::Transport_MidiOut(TSE3::MidiEvent e)
 {
     if (e.data.status==TSE3::MidiCommand_NoteOn)//|c.status==TSE3::MidiCommand_NoteOff)
     {
-        if (lastclock_[e.data.channel]!=e.time)
+/*
+		wxLogDebug(wxT("p: %d - s: %d - c: %d - d1: %d - d2: %d - s: %d"),
+			e.data.port, e.data.status, e.data.channel, e.data.data1, e.data.data2, e.data.selected);
+*/
+		if (lastclock_[e.data.channel]!=e.time)
         {
             song_->activity(e.data.channel);
             lastclock_[e.data.channel]=e.time;
