@@ -8,6 +8,7 @@
 #include <wx/thread.h>
 #include <wx/timer.h>
 
+#include "tse3/FlagTrack.h"
 #include "tse3/MidiFile.h"
 #include "tse3/Track.h"
 #include "tse3/MidiParams.h"

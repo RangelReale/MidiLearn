@@ -1,1 +1,1 @@
-bin\Release\MidiLearn.exe
+binvc\Release\MidiLearn.exe
