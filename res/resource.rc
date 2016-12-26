@@ -1,5 +1,5 @@
 //aaaa ICON "wx/msw/std.ico"
-MIDILEARNICON ICON "res/midilearn.ico"
+MIDILEARNICON ICON "midilearn.ico"
 
 #define wxUSE_NO_MANIFEST 1
 #include "wx/msw/wx.rc"

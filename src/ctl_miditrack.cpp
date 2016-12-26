@@ -1607,7 +1607,12 @@ ML_CTL_Control::ML_CTL_Control() :
     instruments_(), scheduler_(), defaultport_(0), notecolorinit_(false),
     notedisplay_(ND_LETTER)
 {
-	TSE3::Ins::CakewalkInstrumentFile cif("data/Standard.ins");
+
+	TSE3::Ins::CakewalkInstrumentFile cif(
+#ifdef __WXDEBUG__
+		"../../"
+#endif
+		"data/Standard.ins");
 
     TSE3::Ins::Instrument *inst=cif.instrument("General MIDI");
     for (unsigned int in=0; in<128; in++)
