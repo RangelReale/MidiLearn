@@ -1,1 +1,1 @@
-binvc\Release\MidiLearn.exe
+build\bin\RelWithDebInfo\MidiLearn.exe

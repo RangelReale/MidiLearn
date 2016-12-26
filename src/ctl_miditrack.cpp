@@ -1207,7 +1207,7 @@ void ML_CTL_MidiSong::Play()
         //notesctrl_->track_set(-1);
         //pianorollctrl_->track_set(-1);
         transport_->filter()->setPort(ML_CTL_Control::control()->defaultport_get());
-        transport_->filter()->setTransposeIgnoreChannel(9); // do not transpose drum channel
+        //transport_->filter()->setTransposeIgnoreChannel(9); // do not transpose drum channel // TODO!
         mixer_listen();
 
         transport_->play(song_, 0);
@@ -1607,7 +1607,7 @@ ML_CTL_Control::ML_CTL_Control() :
     instruments_(), scheduler_(), defaultport_(0), notecolorinit_(false),
     notedisplay_(ND_LETTER)
 {
-    TSE3::Ins::CakewalkInstrumentFile cif("data/Standard.ins");
+	TSE3::Ins::CakewalkInstrumentFile cif("data/Standard.ins");
 
     TSE3::Ins::Instrument *inst=cif.instrument("General MIDI");
     for (unsigned int in=0; in<128; in++)
