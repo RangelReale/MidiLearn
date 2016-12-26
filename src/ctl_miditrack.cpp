@@ -1609,7 +1609,7 @@ ML_CTL_Control::ML_CTL_Control() :
 {
 
 	TSE3::Ins::CakewalkInstrumentFile cif(
-#ifdef __WXDEBUG__
+#ifndef NDEBUG
 		"../../"
 #endif
 		"data/Standard.ins");
