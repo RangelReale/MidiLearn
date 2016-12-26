@@ -1207,7 +1207,7 @@ void ML_CTL_MidiSong::Play()
         //notesctrl_->track_set(-1);
         //pianorollctrl_->track_set(-1);
         transport_->filter()->setPort(ML_CTL_Control::control()->defaultport_get());
-        //transport_->filter()->setTransposeIgnoreChannel(9); // do not transpose drum channel // TODO!
+        transport_->filter()->setTransposeIgnoreChannel(9); // do not transpose drum channel
         mixer_listen();
 
         transport_->play(song_, 0);
