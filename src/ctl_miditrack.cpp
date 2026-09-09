@@ -1616,32 +1616,37 @@ void ML_CTL_MidiSong::OnFF(wxCommandEvent& event)
 }
 
 
-void ML_CTL_MidiSong::OnTempoSlower(wxCommandEvent& event)
+void ML_CTL_MidiSong::tempo_step(int delta)
 {
+    // The Tempo buttons are live from startup, and both this and pause_locked()
+    // go through the transport.
+    if (!song_ || !transport_) return;
+
     ML_CTL_MidiSong_AutoSong as(this);
+
+    TSE3::MidiScheduler *sch=ML_CTL_Control::control()->scheduler_get();
+
+    int tempo=sch->tempo()+delta;
+    if (tempo<TEMPO_MIN) tempo=TEMPO_MIN;
+    if (tempo>TEMPO_MAX) tempo=TEMPO_MAX;
+    if (tempo==sch->tempo()) return;
 
     bool wasplaying=transport_->status() == TSE3::Transport::Playing;
     if (wasplaying) pause_locked();
 
-    ML_CTL_Control::control()->scheduler_get()->setTempo(ML_CTL_Control::control()->scheduler_get()->tempo()-10,
-        //ML_CTL_Control::control()->scheduler_get()->clock());
-        TSE3::Clock(0));
+    sch->setTempo(tempo, TSE3::Clock(0));
 
     if (wasplaying) pause_locked();
 }
 
+void ML_CTL_MidiSong::OnTempoSlower(wxCommandEvent& event)
+{
+    tempo_step(-TEMPO_STEP);
+}
+
 void ML_CTL_MidiSong::OnTempoFaster(wxCommandEvent& event)
 {
-    ML_CTL_MidiSong_AutoSong as(this);
-
-    bool wasplaying=transport_->status() == TSE3::Transport::Playing;
-    if (wasplaying) pause_locked();
-
-    ML_CTL_Control::control()->scheduler_get()->setTempo(ML_CTL_Control::control()->scheduler_get()->tempo()+10,
-        //ML_CTL_Control::control()->scheduler_get()->clock());
-        TSE3::Clock(0));
-
-    if (wasplaying) pause_locked();
+    tempo_step(TEMPO_STEP);
 }
 
 void ML_CTL_MidiSong::OnTransposeLess(wxCommandEvent& event)

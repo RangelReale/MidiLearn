@@ -367,6 +367,13 @@ private:
     void play_end();
 
     void pause_locked();
+    void tempo_step(int delta);
+
+    // The tempo buttons step by TEMPO_STEP and stop at these bounds; without
+    // them, enough clicks on "Tempo -" reached zero and then went negative.
+    static const int TEMPO_MIN  = 20;
+    static const int TEMPO_MAX  = 300;
+    static const int TEMPO_STEP = 10;
 
     wxGridSizer *trackssizer_;
     TSE3::Song *song_;
