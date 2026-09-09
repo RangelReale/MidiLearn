@@ -138,10 +138,21 @@ void ML_CTL_MidiTrack::track_set(int t)
             {
                 midiprogram_=ins_midievent->data.data1;
             }
-            // channel use count
-            chanuse[ins_midievent->data.channel]++;
+            // Channel use count. Only channel messages carry a meaningful
+            // channel: the importer stamps meta events - lyrics above all - with
+            // channel 0, and enough of those outvote a track's real notes, which
+            // sends the mute to the wrong channel. MidiCommand::channel is a
+            // signed 5-bit field that also carries NoChannel, AllChannels and
+            // SameChannel as negatives, so the range is checked as well.
+            if (ins_midievent->data.isChannel() &&
+                ins_midievent->data.channel >= 0 &&
+                ins_midievent->data.channel < 16)
+            {
+                chanuse[ins_midievent->data.channel]++;
+            }
         }
-        if (midiprogram_!=-1) break;
+        // No early exit once the program is known: the same loop is building the
+        // channel histogram, and stopping here left it counting one Part.
     }
 
     channel_=-1;
