@@ -14,38 +14,49 @@ synthesises audio — it only schedules MIDI events to an external port/synth.
 
 ## Building
 
-Both dependencies are **external source trees, not vendored, not submodules, and not
-fetched by CMake**. There are no presets, so paths must be passed at configure time.
+Both dependencies are **fetched and built by CMake** (`FetchContent`, declared in the
+top-level `CMakeLists.txt`) and pinned there. Nothing has to be installed first, and no
+paths are passed at configure time.
 
-- **wxWidgets** — via stock `FindwxWidgets`, components `core base`. Located with
-  `wxWidgets_ROOT_DIR` / `wxWidgets_LIB_DIR` on Windows, `wx-config` on Linux.
-- **TSE3** (MIDI sequencer) — via the repo-local `cmake/modules/FindTSE3.cmake`. Set
-  `TSE3_ROOT_DIR` or the `TSE3_ROOT` env var to a TSE3 **source checkout** containing
-  `src/tse3/Transport.h`; headers come from `<root>/src` and the library from
-  `<root>/build/lib[/Debug|/Release|/RelWithDebInfo]`, so TSE3 must itself have been
-  CMake-built in place. `find_package(TSE3)` is not `REQUIRED`, but the module raises
-  `FATAL_ERROR` when it fails, so it is effectively mandatory.
+- **wxWidgets** — the 3.2.11 release tarball, pinned by SHA256, built as a subproject:
+  static (`wxBUILD_SHARED=OFF`), non-monolithic, Unicode MSW, `wxBUILD_INSTALL=OFF` so its
+  install rules stay out of this project. Consumed as the `wx::core` / `wx::base` targets,
+  which carry the include dirs (including the generated `setup.h`), the `UNICODE` defines
+  and the MSW system libs. That also covers `res/resource.rc`, whose `#include
+  "wx/msw/wx.rc"` resolves purely through the target's include dirs — no extra wiring.
+- **TSE3** (MIDI sequencer) — the fork below, added with `SOURCE_SUBDIR src/tse3` so only
+  the library is built and the fork's `examples/` and `tse3play/` (which have no disable
+  option) are skipped; that also avoids its own `cmake_minimum_required(VERSION 3.1)`.
+  Its CMake puts **nothing** on the `tse3` target — no include dir, no platform MIDI
+  library — so the top-level `CMakeLists.txt` adds `<src>` and `winmm`/`asound` itself.
+  This is what the deleted `cmake/modules/FindTSE3.cmake` used to do.
 
-**TSE3 must be a patched fork.** `ctl_miditrack.cpp:1210` calls
-`transport_->filter()->setTransposeIgnoreChannel(9)`, which stock TSE3 does not provide.
-
-`build/CMakeCache.txt` (gitignored but present) records the last working configuration and
-is the fastest way to recover the paths: VS 14 2015, 32-bit, wxWidgets 3.1.0 at
-`M:/prog/src/wxWidgets-3.1.0` with `wxWidgets_CONFIGURATION=mswu` (static Unicode MSW,
-`lib/vc_lib`), TSE3 at `M:\prog\src\tse3`.
+**TSE3 must be the patched fork** `https://github.com/RangelReale/tse3` — three separate
+reasons, all load-bearing: `ctl_miditrack.cpp:1210` calls
+`transport_->filter()->setTransposeIgnoreChannel(9)`, which stock 0.3.1 lacks;
+`ctl_miditrack.cpp:955-983` implements `TransportCallback` with the fork's `MidiEvent`
+signature rather than stock's `MidiCommand`; and stock's Win32 `timeSetEvent` callback
+takes `DWORD` where x64 needs `DWORD_PTR`, so it does not build 64-bit.
 
 ```sh
 # Windows — multi-config generator, so --config is required and CMAKE_BUILD_TYPE is ignored
-cmake -S . -B build -G "Visual Studio 14 2015" \
-  -DTSE3_ROOT_DIR=M:/prog/src/tse3 \
-  -DwxWidgets_ROOT_DIR=M:/prog/src/wxWidgets-3.1.0 \
-  -DwxWidgets_LIB_DIR=M:/prog/src/wxWidgets-3.1.0/lib/vc_lib
+cmake -S . -B build -G "Visual Studio 17 2022"
 cmake --build build --config RelWithDebInfo
 
-# Linux — single-config; only TSE3 needs locating
-TSE3_ROOT=/path/to/tse3 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
+# Linux — single-config
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cmake --build build -j
 ```
+
+The first configure downloads ~28 MB into `build/_deps/` and then builds wxWidgets from
+source, so budget several minutes for it; later configures reuse the download. Requires
+CMake ≥ 3.24 (`SOURCE_SUBDIR`, `DOWNLOAD_EXTRACT_TIMESTAMP`).
+
+To build against a local checkout instead of the pinned download, use the standard
+FetchContent override — `-DFETCHCONTENT_SOURCE_DIR_TSE3=M:/prog/src/tse3` or
+`-DFETCHCONTENT_SOURCE_DIR_WXWIDGETS=...`. There is no custom option for this.
+
+Both 32- and 64-bit build; x64 is the VS default and is what the pinned TSE3 was fixed for.
 
 The only target is `midilearn` (lowercase). Output lands in `build/bin/<Config>/`;
 `run.bat` launches the RelWithDebInfo build and **must be run from the repo root** (see
@@ -138,8 +149,9 @@ an empty `OnEraseBackground`, and `wxAutoBufferedPaintDC` in `OnPaint`.
 
 Compile-time `#ifdef` on a single member, not a runtime backend. In `ctl_miditrack.h`
 (lines 28-33 and 436-441): `TSE3::Plt::Win32MidiScheduler` on Windows,
-`TSE3::Plt::AlsaMidiScheduler` on Linux; the link-time half (`Winmm` / `asound`) lives in
-`FindTSE3.cmake`. Changes must be mirrored in all of those places.
+`TSE3::Plt::AlsaMidiScheduler` on Linux; the link-time half (`winmm` / `asound`) is added
+to the fetched `tse3` target in the top-level `CMakeLists.txt`. Changes must be mirrored in
+all of those places.
 
 The Linux arm guards on the bare `unix` macro, which GCC defines only under `-std=gnu++NN`;
 compiling with strict `-std=c++NN` leaves `scheduler_` undeclared. Linux support is real but

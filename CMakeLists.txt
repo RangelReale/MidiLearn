@@ -6,6 +6,10 @@ project(midilearn CXX)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Not cosmetic: the Linux arm of the platform #ifdef in ctl_miditrack.h guards on the bare
+# `unix` macro, which GCC only defines under -std=gnu++NN.
+set(CMAKE_CXX_EXTENSIONS ON)
+
 include(FetchContent)
 
 #
@@ -30,14 +34,15 @@ FetchContent_Declare(wxWidgets
 # TSE3
 #
 # This must be the patched fork: stock TSE3 0.3.1 has no MidiFilter::setTransposeIgnoreChannel
-# (ctl_miditrack.cpp:1210) and its TransportCallback takes a MidiCommand rather than a MidiEvent
-# (ctl_miditrack.cpp:955-983). SOURCE_SUBDIR builds only the library, skipping the fork's
-# examples/ and tse3play/ subdirectories, which have no disable option of their own.
+# (ctl_miditrack.cpp:1210), its TransportCallback takes a MidiCommand rather than a MidiEvent
+# (ctl_miditrack.cpp:955-983), and its Win32 timer callback does not build as x64.
+# SOURCE_SUBDIR builds only the library, skipping the fork's examples/ and tse3play/
+# subdirectories, which have no disable option of their own.
 #
 
 FetchContent_Declare(tse3
   GIT_REPOSITORY https://github.com/RangelReale/tse3.git
-  GIT_TAG        8355bbf2034390446268cc61d1595609db6690a8
+  GIT_TAG        fd4a9bc370d8471343c0e8bf6fa9e92767729390
   SOURCE_SUBDIR  src/tse3
 )
 
