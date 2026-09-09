@@ -59,3 +59,6 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 add_subdirectory(src)
+
+enable_testing()
+add_subdirectory(tests)

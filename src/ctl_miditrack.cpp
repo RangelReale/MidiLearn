@@ -155,16 +155,7 @@ void ML_CTL_MidiTrack::track_set(int t)
         // channel histogram, and stopping here left it counting one Part.
     }
 
-    channel_=-1;
-    unsigned int maxuses=0;
-    for (int i=0; i<16; i++)
-    {
-        if (chanuse[i]>maxuses)
-        {
-            channel_=i;
-            maxuses=chanuse[i];
-        }
-    }
+    channel_=ml_most_used_channel(chanuse);
     lastvol_=-1;
 }
 
@@ -787,17 +778,7 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
 
 bool ML_CTL_MidiTrack_PianoRoll::note_isblack(int note)
 {
-    // Floor-mod, because note is a transposed pitch and can be negative: C++ %
-    // keeps the sign of the dividend, so a plain note%12 matched nothing and
-    // every negative note came back white.
-    bool isblack=false;
-    switch (((note%12)+12)%12)
-    {
-    case 1: case 3: case 6: case 8: case 10:
-        isblack=true;
-        break;
-    }
-    return isblack;
+    return ml_note_isblack(note);
 }
 
 // The visible key range: transposed, and clipped to real MIDI notes. note_pos(),
@@ -805,14 +786,12 @@ bool ML_CTL_MidiTrack_PianoRoll::note_isblack(int note)
 // layout and the note columns drift apart as the song is transposed.
 int ML_CTL_MidiTrack_PianoRoll::range_lo()
 {
-    const int lo=notemin_+song_get()->transport_get()->filter()->transpose();
-    return lo<0?0:lo;
+    return ml_range_lo(notemin_, song_get()->transport_get()->filter()->transpose());
 }
 
 int ML_CTL_MidiTrack_PianoRoll::range_hi()
 {
-    const int hi=notemax_+song_get()->transport_get()->filter()->transpose();
-    return hi>127?127:hi;
+    return ml_range_hi(notemax_, song_get()->transport_get()->filter()->transpose());
 }
 
 // White keys across the current range. Cached, because note_width() is called
@@ -823,11 +802,7 @@ int ML_CTL_MidiTrack_PianoRoll::notes_white_get()
     const int tr=song_get()->transport_get()->filter()->transpose();
     if (notes_white_==0 || tr!=notes_white_transpose_)
     {
-        int n=0;
-        for (int i=range_lo(); i<=range_hi(); i++)
-            if (!note_isblack(i)) n++;
-
-        notes_white_=(n<1?1:n); // never divide by zero in note_width()
+        notes_white_=ml_white_keys(range_lo(), range_hi());
         notes_white_transpose_=tr;
     }
     return notes_white_;
@@ -835,9 +810,7 @@ int ML_CTL_MidiTrack_PianoRoll::notes_white_get()
 
 int ML_CTL_MidiTrack_PianoRoll::note_pos(int note)
 {
-    int nc=0;
-    for (int ctn=range_lo(); ctn<note; ctn++)
-        if (!note_isblack(ctn)) nc++;
+    int nc=ml_white_index(range_lo(), note);
 
     bool isblack=(note_isblack(note));
     //if (isblack) note--;
@@ -1797,37 +1770,7 @@ string ML_CTL_Control::note_get(int note)
 
 string ML_CTL_Control::numberToNoteName(int note)
 {
-    std::string dest;
-
-    if (note >= 0 && note <= 127)
-    {
-
-        switch (note%12)
-        {
-            case 0:  dest.append("Do");  break;
-            case 1:  dest.append("Do#"); break;
-            case 2:  dest.append("Re");  break;
-            case 3:  dest.append("Re#"); break;
-            case 4:  dest.append("Mi");  break;
-            case 5:  dest.append("Fa");  break;
-            case 6:  dest.append("Fa#"); break;
-            case 7:  dest.append("Sol");  break;
-            case 8:  dest.append("Sol#"); break;
-            case 9:  dest.append("La");  break;
-            case 10: dest.append("La#"); break;
-            case 11: dest.append("Si");  break;
-        }
-
-        dest.append("-");
-
-        {
-            std::ostringstream o;
-            o << note/12;
-            dest.append(o.str());
-        }
-    }
-
-    return dest;
+    return ml_note_name(note);
 }
 
 ML_CTL_Control control_root;

@@ -1,9 +1,14 @@
+# The pure note and pitch helpers, kept clear of wxWidgets and TSE3 so tests/ can
+# link them on their own.
+add_library(ml_notes STATIC ml_notes.cpp ml_notes.h)
+target_include_directories(ml_notes PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 add_executable(midilearn WIN32 
   MidiLearnMain.cpp MidiLearnApp.cpp Dlg_Search.cpp Dlg_Port.cpp ctl_miditrack.cpp
   MidiLearnMain.h MidiLearnApp.h Dlg_Search.h Dlg_Port.h ctl_miditrack.h
   ../res/resource.rc)
 
-target_link_libraries(midilearn PRIVATE wx::core wx::base tse3)
+target_link_libraries(midilearn PRIVATE wx::core wx::base tse3 ml_notes)
 
 # Keep the executable where run.bat and the debug-only "../../" data path expect it:
 # build/bin/<Config>/midilearn.exe

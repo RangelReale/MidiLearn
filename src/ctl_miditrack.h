@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "ml_notes.h"
 #include <wx/wx.h>
 #include <wx/control.h>
 #include <wx/thread.h>
