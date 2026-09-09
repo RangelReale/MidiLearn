@@ -3,6 +3,8 @@
 #include <wx/config.h>
 #include <sstream>
 
+#include "tse3/Error.h"
+
 /////////////////////////////////
 // CLASS
 //      ML_CTL_MidiTrack_Activity
@@ -1134,8 +1136,34 @@ void ML_CTL_MidiSong::Load(const wxString &filename)
 {
     Close();
 
-    TSE3::MidiFileImport mfi(string(filename.mb_str(wxConvISO8859_1)));
-    song_ = mfi.load();
+    // MidiFileImport throws on anything it cannot parse: a truncated file, a
+    // .mid that is not one, a file it cannot open. Letting that escape a wx
+    // event handler terminates the app with no window and no message.
+    wxString error;
+    try
+    {
+        TSE3::MidiFileImport mfi(string(filename.mb_str(wxConvISO8859_1)));
+        song_ = mfi.load();
+        if (!song_)
+            error = wxT("The file contains no song data.");
+    }
+    catch (const TSE3::MidiFileImportError &e)
+    {
+        error = wxString((*e).c_str(), wxConvISO8859_1);
+    }
+    catch (const std::exception &e)
+    {
+        error = wxString(e.what(), wxConvISO8859_1);
+    }
+
+    if (!error.IsEmpty())
+    {
+        Close(); // the song may have been left half built
+        wxMessageBox(wxString::Format(wxT("Could not open \"%s\":\n\n%s"),
+            filename.c_str(), error.c_str()),
+            wxT("Open failed"), wxOK|wxICON_ERROR, this);
+        return;
+    }
 
     transport_=new TSE3::Transport(&metronome_, ML_CTL_Control::control()->scheduler_get());
     mixer_=new TSE3::Mixer(ML_CTL_Control::control()->scheduler_get()->numPorts(), transport_);
