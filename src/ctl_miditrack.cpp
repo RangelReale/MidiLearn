@@ -1214,8 +1214,12 @@ void ML_CTL_MidiSong::play_end()
     {
         timer_.Stop();
 
-        ML_CTL_MidiSong_AutoSong as(this);
-
+        // Deliberately no ML_CTL_MidiSong_AutoSong here. Delete() blocks until the
+        // thread has exited, and the thread's own loop acquires songcs_ around
+        // poll(): holding the lock across Delete() deadlocks whenever the player is
+        // sitting on that acquire, which at one poll per millisecond is a race Stop()
+        // loses regularly. Once Delete() returns, the thread is gone and nothing
+        // else reaches the song from it.
         player_->Delete();
         player_=NULL;
     }
