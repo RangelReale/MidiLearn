@@ -1155,12 +1155,17 @@ void ML_CTL_MidiSong::Close()
 
         notesctrl_->track_set(-1);
         pianorollctrl_->track_set(-1);
-
-        delete song_;
-        delete mixer_;
-        delete transport_;
-        song_=NULL;
     }
+
+    // Each of these is guarded by a non-NULL test elsewhere (poll(), mixer_get(),
+    // the transpose handlers), so they must be cleared as well as freed: a Load()
+    // that fails part way leaves this object reachable with the song already gone.
+    delete song_;
+    song_=NULL;
+    delete mixer_;
+    mixer_=NULL;
+    delete transport_;
+    transport_=NULL;
 }
 
 void ML_CTL_MidiSong::play_start()
