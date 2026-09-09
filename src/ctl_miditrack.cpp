@@ -1340,6 +1340,9 @@ bool ML_CTL_MidiSong::trackinfo_get(int channel, trackinfo_t *ti)
 
 void ML_CTL_MidiSong::trackinfo_enabled_set(int channel, bool enabled)
 {
+    // ML_CTL_MidiTrack::channel_ stays -1 for a track whose channel could not be
+    // inferred, and reaches here straight from the Enabled button.
+    if (channel<0 || channel>=16) return;
     if (enabled==trackinfo_[channel].enabled) return;
 
     trackinfo_[channel].enabled=enabled;
@@ -1376,6 +1379,7 @@ void ML_CTL_MidiSong::trackinfo_solo_set(int track)
 
 void ML_CTL_MidiSong::trackinfo_volume_set(int channel, int volpct)
 {
+    if (channel<0 || channel>=16) return;
     if (volpct==trackinfo_[channel].volpct) return;
 
     trackinfo_[channel].volpct=volpct;
