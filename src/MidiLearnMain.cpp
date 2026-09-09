@@ -122,13 +122,9 @@ void MidiLearnFrame::OnSearch(wxCommandEvent& event)
 
 void MidiLearnFrame::OnOpen(wxCommandEvent& event)
 {
-    //midisongctrl_->Load(wxT("c:\\transfer\\karaoke\\Bonus\\Paralamas do Sucesso - Meu erro.kar"));
     wxFileDialog d(this, wxT("Open MIDI file"), wxConfigBase::Get()->Read(wxT("defdir"), wxEmptyString), wxEmptyString, wxT("Midi files|*.mid;*.kar"));
     if (d.ShowModal()==wxID_OK)
-    {
-
-        //file_load(d.GetPath());
-    }
+        midisongctrl_->Load(d.GetPath());
 }
 
 void MidiLearnFrame::OnNoteName(wxCommandEvent& event)
