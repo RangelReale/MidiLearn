@@ -366,6 +366,8 @@ private:
     void play_start();
     void play_end();
 
+    void pause_locked();
+
     wxGridSizer *trackssizer_;
     TSE3::Song *song_;
     wxCriticalSection songcs_;

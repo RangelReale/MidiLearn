@@ -1293,19 +1293,26 @@ void ML_CTL_MidiSong::Stop()
     }
 }
 
+// songcs_ must already be held. wxCriticalSection is not recursive on every
+// platform, so the public entry points take the lock once and call this rather
+// than calling Pause() back into itself.
+void ML_CTL_MidiSong::pause_locked()
+{
+    if (transport_->status() == TSE3::Transport::Playing)
+        transport_->stop();
+    else
+        transport_->play(song_, transport_->scheduler()->clock());
+
+    Refresh();
+}
+
 void ML_CTL_MidiSong::Pause()
 {
     if (song_ && player_)
     {
-        if (transport_->status() == TSE3::Transport::Playing)
-        {
-            transport_->stop();
-            Refresh();
-        } else {
-            transport_->play(song_, transport_->scheduler()->clock());
-            Refresh();
-        }
+        ML_CTL_MidiSong_AutoSong as(this);
 
+        pause_locked();
     }
 }
 
@@ -1313,12 +1320,14 @@ void ML_CTL_MidiSong::Rew()
 {
     if (song_ && player_)
     {
+        ML_CTL_MidiSong_AutoSong as(this);
+
         bool wasplaying=transport_->status() == TSE3::Transport::Playing;
-        if (wasplaying) Pause();
+        if (wasplaying) pause_locked();
 
         transport_->rew(true);
 
-        if (wasplaying) Pause();
+        if (wasplaying) pause_locked();
 
         Refresh();
     }
@@ -1328,12 +1337,14 @@ void ML_CTL_MidiSong::FF()
 {
     if (song_ && player_)
     {
+        ML_CTL_MidiSong_AutoSong as(this);
+
         bool wasplaying=transport_->status() == TSE3::Transport::Playing;
-        if (wasplaying) Pause();
+        if (wasplaying) pause_locked();
 
         transport_->ff(true);
 
-        if (wasplaying) Pause();
+        if (wasplaying) pause_locked();
 
         Refresh();
     }
@@ -1610,13 +1621,13 @@ void ML_CTL_MidiSong::OnTempoSlower(wxCommandEvent& event)
     ML_CTL_MidiSong_AutoSong as(this);
 
     bool wasplaying=transport_->status() == TSE3::Transport::Playing;
-    if (wasplaying) Pause();
+    if (wasplaying) pause_locked();
 
     ML_CTL_Control::control()->scheduler_get()->setTempo(ML_CTL_Control::control()->scheduler_get()->tempo()-10,
         //ML_CTL_Control::control()->scheduler_get()->clock());
         TSE3::Clock(0));
 
-    if (wasplaying) Pause();
+    if (wasplaying) pause_locked();
 }
 
 void ML_CTL_MidiSong::OnTempoFaster(wxCommandEvent& event)
@@ -1624,13 +1635,13 @@ void ML_CTL_MidiSong::OnTempoFaster(wxCommandEvent& event)
     ML_CTL_MidiSong_AutoSong as(this);
 
     bool wasplaying=transport_->status() == TSE3::Transport::Playing;
-    if (wasplaying) Pause();
+    if (wasplaying) pause_locked();
 
     ML_CTL_Control::control()->scheduler_get()->setTempo(ML_CTL_Control::control()->scheduler_get()->tempo()+10,
         //ML_CTL_Control::control()->scheduler_get()->clock());
         TSE3::Clock(0));
 
-    if (wasplaying) Pause();
+    if (wasplaying) pause_locked();
 }
 
 void ML_CTL_MidiSong::OnTransposeLess(wxCommandEvent& event)
