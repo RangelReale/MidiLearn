@@ -416,7 +416,7 @@ void ML_CTL_MidiTrack_Notes::OnPaint(wxPaintEvent& event)
                         //wxString n=wxString(TSE3::Util::numberToNote(ins_midievent->data.data1).c_str(), wxConvUTF8);
                         wxString n=wxString(ML_CTL_Control::control()->note_get(ins_midievent->data.data1).c_str(), wxConvUTF8);
                         //dc.DrawText(n, dpos, dhei);
-                        ML_CTL_Control::control()->DrawTextOutline(dc, n, dpos, dhei, 1);
+                        ML_CTL_Control::DrawTextOutline(dc, n, dpos, dhei, 1);
                         dc.GetTextExtent(n, &dw, &dh);
 
                         first=false;
@@ -577,7 +577,7 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
                     dx-nnspacing+(note_width()/2.0), GetClientRect().GetHeight()-15);
 */
                 //dc.SetPen(*wxBLACK_PEN);
-                ML_CTL_Control::control()->DrawTextOutline(dc, nds,
+                ML_CTL_Control::DrawTextOutline(dc, nds,
                     dx-nnspacing+(note_width()/2.0), GetClientRect().GetHeight()-15, 1);
             }
         }
@@ -733,7 +733,7 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
 
                                 //dc.DrawText(nds, cnpos-nnspacing+(note_width()/2.0), chpos-15);
                                 //dc.SetPen(*wxBLACK_PEN);
-                                ML_CTL_Control::control()->DrawTextOutline(dc, nds, cnpos-nnspacing+(note_width()/2.0), chpos-15, 1);
+                                ML_CTL_Control::DrawTextOutline(dc, nds, cnpos-nnspacing+(note_width()/2.0), chpos-15, 1);
 
 
                                 //dc.DrawText(wxString::Format(wxT("PS:%d; P:%d; B:%d"), lastclock.pulses, lastclock.pulse(), lastclock.beat()), cnpos, chpos-15);
@@ -942,8 +942,8 @@ void ML_CTL_MidiTrack_Lyrics::OnPaint(wxPaintEvent& event)
         dc.SetBrush(*wxRED_BRUSH);
         dc.DrawRectangle(0, 0, dw, GetClientRect().GetHeight());
 
-        ML_CTL_Control::control()->DrawTextOutline(dc, wxString(lyrics.c_str(), wxConvISO8859_1), 0, 0, 2);
-        ML_CTL_Control::control()->DrawTextOutline(dc, wxString(lyricsn.c_str(), wxConvISO8859_1), dw, 0, 2);
+        ML_CTL_Control::DrawTextOutline(dc, wxString(lyrics.c_str(), wxConvISO8859_1), 0, 0, 2);
+        ML_CTL_Control::DrawTextOutline(dc, wxString(lyricsn.c_str(), wxConvISO8859_1), dw, 0, 2);
     }
 }
 
