@@ -1763,7 +1763,7 @@ void ML_CTL_Control::init_notecolors()
     notecolor_[10]=wxTheColourDatabase->Find(wxT("PINK")); // A#
     notecolor_[11]=wxColor(0xcd, 0x85, 0x3f); // BROWN  //wxTheColourDatabase->Find(wxT("MAROON")); // B
 
-    notecolorinit_=false;
+    notecolorinit_=true;
 }
 
 void ML_CTL_Control::DrawTextOutline(wxDC &dc, const wxString &text, int x, int y, int outlinesize)
