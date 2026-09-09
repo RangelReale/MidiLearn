@@ -11,7 +11,9 @@ OutputDir=release\win32
 Name: "{app}\data"
 
 [Files]
-Source: "bin\Release\midilearn.exe"; DestDir: "{app}"
+; CMake writes to build\bin\<Config>\; RelWithDebInfo is the configuration the
+; documented build command produces and the one run.bat launches.
+Source: "build\bin\RelWithDebInfo\midilearn.exe"; DestDir: "{app}"
 Source: "README"; DestDir: "{app}"; DestName: "README.txt"
 Source: "data\*"; DestDir: "{app}\data"; Excludes: "Makefile.*,.svn"; Flags: recursesubdirs
 

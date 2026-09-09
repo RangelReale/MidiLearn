@@ -1,4 +1,4 @@
-MIDILearn 0.4
+MIDILearn 0.5
 =============
 MidiLearn is a program to learn how to play music without needing to know how to read a score. Using common MID or KAR files, one of the tracks is muted and displayed in a custom piano roll view created to be easy and fast to read.
 
