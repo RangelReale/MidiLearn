@@ -52,7 +52,7 @@ class ML_CTL_MidiTrack_Activity : public wxPanel
 public:
     ML_CTL_MidiTrack_Activity(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxDefaultSize, long style = 0,
-        const wxValidator& validator = wxDefaultValidator, const wxString& name = wxPanelNameStr);
+        const wxString& name = wxPanelNameStr);
 
     void step();
 protected:
@@ -76,7 +76,7 @@ class ML_CTL_MidiTrack : public wxPanel
 public:
     ML_CTL_MidiTrack(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxDefaultSize, long style = 0,
-        const wxValidator& validator = wxDefaultValidator, const wxString& name = wxPanelNameStr);
+        const wxString& name = wxPanelNameStr);
 
     ML_CTL_MidiSong *song_get() { return (ML_CTL_MidiSong*)GetParent(); }
 
@@ -137,7 +137,7 @@ class ML_CTL_MidiTrack_Notes : public wxPanel
 public:
     ML_CTL_MidiTrack_Notes(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxDefaultSize, long style = 0,
-        const wxValidator& validator = wxDefaultValidator, const wxString& name = wxPanelNameStr);
+        const wxString& name = wxPanelNameStr);
 
     virtual ML_CTL_MidiSong *song_get() { return ((ML_CTL_MidiTrack*)GetParent())->song_get(); }
 
@@ -165,8 +165,8 @@ class ML_CTL_MidiTrack_NotesRoot : public ML_CTL_MidiTrack_Notes
 public:
     ML_CTL_MidiTrack_NotesRoot(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxDefaultSize, long style = 0,
-        const wxValidator& validator = wxDefaultValidator, const wxString& name = wxPanelNameStr) :
-        ML_CTL_MidiTrack_Notes(parent, id, pos, size, style, validator, name) {}
+        const wxString& name = wxPanelNameStr) :
+        ML_CTL_MidiTrack_Notes(parent, id, pos, size, style, name) {}
 
     virtual ML_CTL_MidiSong *song_get() { return (ML_CTL_MidiSong*)GetParent(); }
 };
@@ -181,7 +181,7 @@ class ML_CTL_MidiTrack_PianoRoll : public wxPanel
 public:
     ML_CTL_MidiTrack_PianoRoll(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxDefaultSize, long style = 0,
-        const wxValidator& validator = wxDefaultValidator, const wxString& name = wxPanelNameStr);
+        const wxString& name = wxPanelNameStr);
 
     virtual ML_CTL_MidiSong *song_get() { return (ML_CTL_MidiSong*)GetParent(); }
 
@@ -223,7 +223,7 @@ class ML_CTL_MidiTrack_Lyrics : public wxPanel
 public:
     ML_CTL_MidiTrack_Lyrics(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxDefaultSize, long style = 0,
-        const wxValidator& validator = wxDefaultValidator, const wxString& name = wxPanelNameStr);
+        const wxString& name = wxPanelNameStr);
 
     virtual ML_CTL_MidiSong *song_get() { return (ML_CTL_MidiSong*)GetParent(); }
 protected:
@@ -285,7 +285,7 @@ public:
 
     ML_CTL_MidiSong(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxDefaultSize, long style = 0,
-        const wxValidator& validator = wxDefaultValidator, const wxString& name = wxPanelNameStr);
+        const wxString& name = wxPanelNameStr);
     ~ML_CTL_MidiSong() { Close(); }
 
     void Load(const wxString &filename);

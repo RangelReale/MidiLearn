@@ -11,7 +11,7 @@
 /////////////////////////////////
 ML_CTL_MidiTrack_Activity::ML_CTL_MidiTrack_Activity(wxWindow* parent, wxWindowID id, const wxPoint& pos,
     const wxSize& size, long style,
-    const wxValidator& validator, const wxString& name) :
+    const wxString& name) :
     wxPanel(parent, id, pos, size, style, name), activitylist_(), current_(-1)
 {
     wxBoxSizer *topsizer=new wxBoxSizer(wxHORIZONTAL);
@@ -59,8 +59,7 @@ BEGIN_EVENT_TABLE(ML_CTL_MidiTrack, wxPanel)
 END_EVENT_TABLE()
 
 ML_CTL_MidiTrack::ML_CTL_MidiTrack(wxWindow* parent, wxWindowID id, const wxPoint& pos,
-    const wxSize& size, long style, const wxValidator& validator,
-    const wxString& name) :
+    const wxSize& size, long style, const wxString& name) :
     wxPanel(parent, id, pos, size, style, name), track_(-1),
     channel_(-1), lastvol_(-1), midiprogram_(-1)
 {
@@ -298,8 +297,7 @@ BEGIN_EVENT_TABLE(ML_CTL_MidiTrack_Notes, wxPanel)
 END_EVENT_TABLE()
 
 ML_CTL_MidiTrack_Notes::ML_CTL_MidiTrack_Notes(wxWindow* parent, wxWindowID id, const wxPoint& pos,
-    const wxSize& size, long style, const wxValidator& validator,
-    const wxString& name) :
+    const wxSize& size, long style, const wxString& name) :
     wxPanel(parent, id, pos, size, style, name), track_(-1)
 {
     SetBackgroundStyle(wxBG_STYLE_CUSTOM);
@@ -442,8 +440,7 @@ BEGIN_EVENT_TABLE(ML_CTL_MidiTrack_PianoRoll, wxPanel)
 END_EVENT_TABLE()
 
 ML_CTL_MidiTrack_PianoRoll::ML_CTL_MidiTrack_PianoRoll(wxWindow* parent, wxWindowID id, const wxPoint& pos,
-    const wxSize& size, long style, const wxValidator& validator,
-    const wxString& name) :
+    const wxSize& size, long style, const wxString& name) :
     wxPanel(parent, id, pos, size, style, name), track_(-1), notemin_(-1), notemax_(-1),
     notes_white_(0), notes_white_transpose_(0), lastactivity_(0)
 {
@@ -849,8 +846,7 @@ BEGIN_EVENT_TABLE(ML_CTL_MidiTrack_Lyrics, wxPanel)
 END_EVENT_TABLE()
 
 ML_CTL_MidiTrack_Lyrics::ML_CTL_MidiTrack_Lyrics(wxWindow* parent, wxWindowID id, const wxPoint& pos,
-    const wxSize& size, long style, const wxValidator& validator,
-    const wxString& name) :
+    const wxSize& size, long style, const wxString& name) :
     wxPanel(parent, id, pos, size, style, name)
 {
     SetBackgroundStyle(wxBG_STYLE_CUSTOM);
@@ -1036,8 +1032,7 @@ BEGIN_EVENT_TABLE(ML_CTL_MidiSong, wxPanel)
 END_EVENT_TABLE()
 
 ML_CTL_MidiSong::ML_CTL_MidiSong(wxWindow* parent, wxWindowID id, const wxPoint& pos,
-    const wxSize& size, long style, const wxValidator& validator,
-    const wxString& name) :
+    const wxSize& size, long style, const wxString& name) :
     wxPanel(parent, id, pos, size, style, name), song_(NULL), songcs_(),
     player_(NULL), metronome_(), transport_(NULL),
     mixer_(NULL), tracklist_(), timer_(this), tracksolo_(-1), trackinfo_(),
