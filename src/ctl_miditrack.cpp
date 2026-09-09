@@ -1162,8 +1162,8 @@ void ML_CTL_MidiSong::Load(const wxString &filename)
     {
         TSE3::MidiFileImport mfi(string(filename.mb_str(wxConvISO8859_1)));
         song_ = mfi.load();
-        if (!song_)
-            error = wxT("The file contains no song data.");
+        if (!song_ || song_->size()==0)
+            error = wxT("The file contains no song data."); // e.g. truncated after the header
     }
     catch (const TSE3::MidiFileImportError &e)
     {
