@@ -11,7 +11,6 @@ public:
         const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize,
         long style = wxDEFAULT_DIALOG_STYLE);
 
-    void Init() {}
     void CreateControls();
 
     int GetPort() { return port_; }

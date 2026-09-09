@@ -12,7 +12,6 @@ DLG_ML_Search::DLG_ML_Search(wxWindow* parent, wxWindowID id, const wxString& ti
     const wxPoint& pos, const wxSize& size,
     long style) : wxDialog(parent, id, title, pos, size, style)
 {
-    Init();
     CreateControls();
 }
 

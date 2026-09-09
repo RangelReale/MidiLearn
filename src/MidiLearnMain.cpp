@@ -38,7 +38,7 @@ MidiLearnFrame::MidiLearnFrame(wxFrame *frame, const wxString& title)
 {
 #ifndef NDEBUG
     (void) new wxLogWindow(this, wxT("log"));
-#endif //__WXDEBUG__
+#endif //NDEBUG
 
 
     wxMenuBar* mbar = new wxMenuBar();
@@ -90,7 +90,10 @@ void MidiLearnFrame::OnQuit(wxCommandEvent &event)
 
 void MidiLearnFrame::OnAbout(wxCommandEvent &event)
 {
-
+    wxMessageBox(wxString::Format(
+        _("MIDILearn %s") + wxString(wxT(" - ")) +
+        _("learn to play from ordinary MIDI and karaoke files."), ML_VERSION),
+        _("About MIDILearn"), wxOK|wxICON_INFORMATION, this);
 }
 
 void MidiLearnFrame::OnPorts(wxCommandEvent& event)

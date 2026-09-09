@@ -11,7 +11,6 @@ DLG_ML_Port::DLG_ML_Port(wxWindow* parent, wxWindowID id, const wxString& title,
     const wxPoint& pos, const wxSize& size,
     long style) : wxDialog(parent, id, title, pos, size, style)
 {
-    Init();
     CreateControls();
 }
 

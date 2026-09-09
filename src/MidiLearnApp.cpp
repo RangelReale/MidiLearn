@@ -25,7 +25,8 @@ bool MidiLearnApp::OnInit()
     SetAppName(wxT("MIDILearn"));
     //SetVendorName("MIDILearn");
 
-    MidiLearnFrame* frame = new MidiLearnFrame(0L, _("MIDILearn 0.5"));
+    MidiLearnFrame* frame = new MidiLearnFrame(0L,
+        wxString::Format(_("MIDILearn %s"), ML_VERSION));
 #ifdef __WXMSW__
     frame->SetIcon(wxICON(MIDILEARNICON)); // To Set App Icon
 #endif

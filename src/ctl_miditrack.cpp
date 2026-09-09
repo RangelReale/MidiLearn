@@ -317,7 +317,6 @@ void ML_CTL_MidiTrack_Notes::OnEraseBackground(wxEraseEvent &event)
 void ML_CTL_MidiTrack_Notes::OnPaint(wxPaintEvent& event)
 {
     wxAutoBufferedPaintDC dc(this);
-    //wxPaintDC dc(this);
 
     dc.SetBrush(*wxWHITE_BRUSH);
     dc.SetPen(*wxTRANSPARENT_PEN);
@@ -329,10 +328,8 @@ void ML_CTL_MidiTrack_Notes::OnPaint(wxPaintEvent& event)
         {
             ML_CTL_MidiSong_AutoSong as(song_get());
             playtime=song_get()->transport_get()->scheduler()->clock();
-			//wxLogDebug(wxT("Clock: %d"), playtime.beat());
         }
 
-        //dc.SetTextForeground(*wxBLACK);
         dc.SetTextForeground(*wxWHITE);
         dc.SetTextBackground(*wxGREEN);
         dc.SetPen(*wxBLACK_PEN);
@@ -345,8 +342,6 @@ void ML_CTL_MidiTrack_Notes::OnPaint(wxPaintEvent& event)
         TSE3::MidiEvent ins_midieventfilter;
         TSE3::Clock lastclock(0);
         bool first=true;
-        int lastnote=-1;
-        wxBrush *notebrush;
 
         ins_track=(*song_get()->song_get())[track_];
         for (unsigned int r=0; r<ins_track->size(); r++)
@@ -367,41 +362,9 @@ void ML_CTL_MidiTrack_Notes::OnPaint(wxPaintEvent& event)
                         if (ins_midievent->time!=lastclock)
                         {
                             dhei=0;
-                            //dpos+=dw+40;
                             if (!first)
                                 dpos+=(dw*2)+(10*((ins_midievent->time-lastclock)/TSE3::Clock::PPQN));
 
-                            /*if (first)
-                            {
-                                dc.SetBrush(*wxGREEN_BRUSH);
-                            } else */
-/*
-                            if (ins_midievent->data.data1>lastnote) {
-                                dc.SetBrush(*wxRED_BRUSH);
-                            } else if (ins_midievent->data.data1<lastnote) {
-                                dc.SetBrush(*wxLIGHT_GREY_BRUSH);
-                            } else {
-                                dc.SetBrush(*wxCYAN_BRUSH);
-                            }
-*/
-
-                            //notebrush=wxTheBrushList->FindOrCreateBrush(wxColour(0, 0, 100+(int)((1.0/127.0)*(float)ins_midievent->data.data1)*100));
-/*
-                            notebrush=wxTheBrushList->FindOrCreateBrush(wxColour(
-                                0, //calccolor(ins_midievent->data.data1/12, 0, 11, 85, 255, true),
-                                calccolor(ins_midievent->data.data1/12, 0, 11, 0, 255),
-                                calccolor(ins_midievent->data.data1%12, 0, 11, 85, 255)));
-*/
-/*
-                                85+(ins_midievent->data.data1/12*15),
-                                85+(ins_midievent->data.data1/12*15),
-                                85+(ins_midievent->data.data1%12*15)));
-*/
-                            //dc.SetBrush(*notebrush);
-
-                            //colorrangeset(dc, (1/12)*(ins_midievent->data.data1%12), ins_midievent->data.data1/12);
-                            //colorrangeset(dc, (1/12)*(ins_midievent->data.data1/12), ins_midievent->data.data1%12);
-                            //colorrangeset(dc, 100, ins_midievent->data.data1%12);
                             dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(ML_CTL_Control::control()->notecolor_get(ins_midievent->data.data1)));
 
                             dc.DrawRectangle(wxRect(dpos, 0, 40, GetClientRect().GetHeight()));
@@ -411,17 +374,12 @@ void ML_CTL_MidiTrack_Notes::OnPaint(wxPaintEvent& event)
                             dhei+=dh;
                         }
 
-                        //wxString n=wxString(TSE3::Util::numberToNote(ins_midievent->data.data1).c_str(), wxConvUTF8);
                         wxString n=wxString(ML_CTL_Control::control()->note_get(ins_midievent->data.data1).c_str(), wxConvUTF8);
-                        //dc.DrawText(n, dpos, dhei);
                         ML_CTL_Control::DrawTextOutline(dc, n, dpos, dhei, 1);
                         dc.GetTextExtent(n, &dw, &dh);
 
                         first=false;
-
-                        //dpos+=dw;
                     }
-                    lastnote=ins_midievent->data.data1;
                     lastclock=ins_midievent->time;
                 }
             }
@@ -435,7 +393,6 @@ void ML_CTL_MidiTrack_Notes::OnPaint(wxPaintEvent& event)
 //      ML_CTL_MidiTrack_PianoRoll
 /////////////////////////////////
 BEGIN_EVENT_TABLE(ML_CTL_MidiTrack_PianoRoll, wxPanel)
-    //EVT_ERASE_BACKGROUND(ML_CTL_MidiTrack_Notes::OnEraseBackground)
     EVT_PAINT(ML_CTL_MidiTrack_PianoRoll::OnPaint)
 END_EVENT_TABLE()
 
@@ -505,7 +462,6 @@ void ML_CTL_MidiTrack_PianoRoll::OnEraseBackground(wxEraseEvent &event)
 void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
 {
     wxAutoBufferedPaintDC dc(this);
-    //wxPaintDC dc(this);
 
     dc.SetBrush(*wxWHITE_BRUSH);
     dc.SetPen(*wxTRANSPARENT_PEN);
@@ -524,28 +480,21 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
 
         int nnspacing=(dc.GetCharWidth()*3)/2;
 
-        //int nmin=(notemin_!=-1?notemin_:0), nmax=(notemax_!=-1?notemax_:127);
 
         dc.SetPen(*wxBLACK_PEN);
 
-        //float npos=GetClientRect().GetWidth()/(float)(nmax-nmin+1);
         // draw white notes
         int dx;
         for (int i=range_lo(); i<=range_hi(); i++)
         {
             wxString nds(ML_CTL_Control::control()->note_get(i).c_str(), wxConvUTF8);
-            //nds.Replace(wxT("-"), wxT(""), true);
-            //nds.RemoveLast();
 
 
             if (!note_isblack(i))
             {
-                //dx=(int)((float)(i-nmin)*npos);
                 dx=note_pos(i);
 
-                bool isblack=note_isblack(i);
 
-                //dc.SetPen(*wxBLACK_PEN);
                 dc.DrawLine(dx, 0, dx, GetClientRect().GetHeight());
                 if (i%12==0 || i%12==5) // C || F
                 {
@@ -553,27 +502,11 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
                     dc.DrawLine(dx+1, 0, dx+1, GetClientRect().GetHeight());
                 }
 
-                //dc.SetTextForeground(*wxBLACK);
-                //dc.SetPen(*wxTRANSPARENT_PEN);
-                if (i%12==0 || i%12==5) // C || F
-                {
-                    dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(wxColor(0xef, 0xef, 0xef)));
-                }
-                else
-                {
-                    dc.SetBrush(*wxWHITE_BRUSH);
-                }
                 dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(ML_CTL_Control::control()->notecolor_get(i)));
 
                 dc.DrawRectangle(dx+2, GetClientRect().GetHeight()-15, /*dx+*/note_width()-2, GetClientRect().GetHeight());
 
-                //nds=wxString::Format(wxT("%f - %d"), note_width(), dx);
 
-/*
-                dc.DrawText(nds,
-                    dx-nnspacing+(note_width()/2.0), GetClientRect().GetHeight()-15);
-*/
-                //dc.SetPen(*wxBLACK_PEN);
                 ML_CTL_Control::DrawTextOutline(dc, nds,
                     dx-nnspacing+(note_width()/2.0), GetClientRect().GetHeight()-15, 1);
             }
@@ -581,13 +514,10 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
 
         // draw black notes
         dc.SetBrush(*wxBLACK_BRUSH);
-        //dc.SetPen(*wxTRANSPARENT_PEN);
         int bnw=note_width()/3;
         for (int i=range_lo(); i<=range_hi(); i++)
         {
             wxString nds(ML_CTL_Control::control()->note_get(i).c_str(), wxConvUTF8);
-            //nds.Replace(wxT("-"), wxT(""), true);
-            //nds.RemoveLast();
 
             if (note_isblack(i))
             {
@@ -598,7 +528,6 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
             }
         }
 
-        //dc.SetPen(*wxTRANSPARENT_PEN);
 
         TSE3::Clock playtime;
         {
@@ -617,8 +546,6 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
         dc.SetPen(*wxLIGHT_GREY_PEN);
         while (dbl>0)
         {
-            //int chpos=(((blclock-playtime)/(float)TSE3::Clock::PPQN)*30);
-            //dbl-=chpos;
 
             int chpos=(GetClientSize().GetHeight()-
                 (((blclock-playtime)/(float)TSE3::Clock::PPQN)*30))
@@ -635,10 +562,6 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
             if (blclock.beat()%4==0)
                 dc.DrawLine(0, dbl-1, GetClientSize().GetWidth(), dbl-1);
 
-/*
-            dc.DrawText(wxString::Format(wxString::Format(wxT("PS:%d; P:%d; B:%d; RB: %f"),
-                blclock.pulses, blclock.pulse(), blclock.beat(), blclock.pulses / (float)TSE3::Clock::PPQN)), 0, dbl);
-*/
 
             blclock+=(/*4**/TSE3::Clock::PPQN);
         }
@@ -652,9 +575,6 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
         const TSE3::MidiEvent *ins_midievent;
         TSE3::MidiEvent ins_midieventfilter;
         TSE3::Clock lastclock(0), lastendclock(0);
-        bool first=true;
-        int lastnote=-1;
-        wxBrush *notebrush;
         vector<int> draw_notes;
 
         ins_track=(*song_get()->song_get())[track_];
@@ -691,23 +611,9 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
 
                             for (vector<int>::const_iterator di=draw_notes.begin(); di!=draw_notes.end(); di++)
                             {
-                                //int cnpos=(int)(npos*(*di-nmin));
                                 int cnpos=note_pos(*di);
                                 int cnheight=chendpos;
 
-/*
-                                if (note_isblack(*di))
-                                {
-                                    dc.SetPen(*wxThePenList->FindOrCreatePen(ML_CTL_Control::control()->notecolor_get(*di), 7, wxSOLID));
-                                    dc.SetBrush(*wxBLACK_BRUSH);
-                                }
-                                else
-                                {
-                                    dc.SetPen(*wxBLACK_PEN);
-                                    dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(ML_CTL_Control::control()->notecolor_get(*di)));
-
-                                }
-*/
                                 dc.SetPen(*wxThePenList->FindOrCreatePen(*wxBLACK, (note_isblack(*di)?2:1), wxSOLID));
                                 dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(ML_CTL_Control::control()->notecolor_get(*di)));
                                 dc.DrawRectangle(wxRect(cnpos, chendpos, note_width(), chpos-chendpos));
@@ -728,25 +634,11 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
                                 }
 
 
-                                //dc.DrawText(nds, cnpos-nnspacing+(note_width()/2.0), chpos-15);
-                                //dc.SetPen(*wxBLACK_PEN);
                                 ML_CTL_Control::DrawTextOutline(dc, nds, cnpos-nnspacing+(note_width()/2.0), chpos-15, 1);
 
 
-                                //dc.DrawText(wxString::Format(wxT("PS:%d; P:%d; B:%d"), lastclock.pulses, lastclock.pulse(), lastclock.beat()), cnpos, chpos-15);
                             }
 
-/*
-                            if (draw_notes.size()>1)
-                            {
-                                dc.SetPen(*wxBLACK_PEN);
-                                dc.DrawLine(0, chpos, GetClientSize().GetWidth(), chpos);
-                            } else {
-                                //dc.SetPen(*wxLIGHT_GREY_PEN);
-                                //dc.DrawLine(0, chpos, GetClientSize().GetWidth(), chpos);
-                            }
-*/
-                            //dc.SetPen(*wxTRANSPARENT_PEN);
 
                             draw_notes.clear();
                         }
@@ -754,13 +646,6 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
                             draw_notes.push_back(ins_midievent->data.data1);
 
 
-                        //wxString n=wxString(ML_CTL_Control::control()->note_get(ins_midievent->data.data1).c_str(), wxConvUTF8);
-                        //dc.DrawText(n, dpos, dhei);
-                        //dc.GetTextExtent(n, &dw, &dh);
-
-                        first=false;
-
-                        //dpos+=dw;
                     }
                     if (ins_midievent)
                     {
@@ -1696,7 +1581,6 @@ void ML_CTL_MidiSong::OnPaint(wxPaintEvent& event)
     dc.SetTextForeground(*wxBLACK);
     dc.DrawText(wxString::Format(wxT("Song")), 5, 5);
 }
-
 
 
 void ML_CTL_MidiSong::int_channel_volchanged(int channel)
