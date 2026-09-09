@@ -76,13 +76,21 @@ the binary at `bin\Release\midilearn.exe`. `site/` is an archived project page, 
 by `TSE3::Ins::CakewalkInstrumentFile` for the 128 General MIDI patch names. It is loaded
 from `ML_CTL_Control`'s constructor, which runs at **static-init time** — before
 `MidiLearnApp::OnInit` — because `control()` returns the address of the file-scope global
-`control_root` (`ctl_miditrack.cpp:1677`). A failure there is not recoverable from app code.
+`control_root` (`ctl_miditrack.cpp:1677`). A failure there is not recoverable from app code —
+a release build that cannot find the file **segfaults before `main()`**, with no window and no
+message.
 
 The path is assembled by string-literal concatenation across a preprocessor conditional
 (`ctl_miditrack.cpp:1611`): debug builds prepend `"../../"` to climb out of
-`build/bin/<Config>/`, release builds resolve `data/Standard.ins` against the CWD. That is
-why `run.bat` must start from the repo root, and why the installer ships `data\` beside the
-exe with `WorkingDir: {app}`.
+`build/bin/<Config>/` (which resolves against `build/src/`, the VS debugger's working
+directory), release builds resolve `data/Standard.ins` against the CWD. That is why
+`run.bat` must start from the repo root, and why the installer ships `data\` beside the exe
+with `WorkingDir: {app}`.
+
+Because of that, a `POST_BUILD` step in `src/CMakeLists.txt` copies `data/` into
+`$<TARGET_FILE_DIR:midilearn>` — the same layout the installer uses — so the built exe also
+runs from its own directory. Nothing resolves the path relative to the executable; both
+working directories have to be made to work.
 
 Settings live in `wxConfigBase` under app name `MIDILearn` (the Windows registry), so
 first-run state is outside the repo. Two keys only: `port` and `defdir`.
