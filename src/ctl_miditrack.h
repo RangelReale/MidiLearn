@@ -57,7 +57,7 @@ public:
     void step();
 protected:
     enum {
-        ID_ACTIVITY,
+        ID_ACTIVITY = 200,
     };
 
     static const int ACTIVITY_COUNT = 10;
@@ -95,7 +95,7 @@ public:
     int midiprogram_get() { return midiprogram_; }
 protected:
     enum {
-        ID_SOLO,
+        ID_SOLO = 100,
         ID_ENABLED,
         ID_SHOWNOTES,
         ID_VOL_LOW,
@@ -298,8 +298,7 @@ public:
     void FF();
 
     enum {
-        ID_TRACKS = 1000,
-        ID_PLAYER,
+        ID_PLAYER = 1000,
         ID_NOTES,
         ID_PIANOROLL,
         ID_LYRICS,
@@ -315,6 +314,11 @@ public:
         ID_TRANSPOSE_MORE,
 
         ID_OPEN,
+
+        // create_track() hands out ID_TRACKS + track number, so this needs a
+        // range of its own: at 1000 track 1 collided with ID_PLAYER and track 5
+        // with the Play button.
+        ID_TRACKS = 2000,
     };
 
     void songget_begin();
