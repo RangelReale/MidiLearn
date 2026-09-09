@@ -1034,7 +1034,8 @@ ML_CTL_MidiSong::ML_CTL_MidiSong(wxWindow* parent, wxWindowID id, const wxPoint&
     const wxString& name) :
     wxPanel(parent, id, pos, size, style, name), song_(NULL), songcs_(),
     player_(NULL), metronome_(), transport_(NULL),
-    mixer_(NULL), tracklist_(), timer_(this), tracksolo_(-1), trackinfo_()
+    mixer_(NULL), tracklist_(), timer_(this), tracksolo_(-1), trackinfo_(),
+    tcallback_(NULL), mixerlisteners_(), mixerlistenport_(-1)
 {
     // allocate tracks
     tracks_allocate();
@@ -1179,7 +1180,8 @@ void ML_CTL_MidiSong::Load(const wxString &filename)
     transport_=new TSE3::Transport(&metronome_, ML_CTL_Control::control()->scheduler_get());
     mixer_=new TSE3::Mixer(ML_CTL_Control::control()->scheduler_get()->numPorts(), transport_);
 
-    transport_->attachCallback(new ML_CTL_MidiSong_TCallback(this));
+    tcallback_=new ML_CTL_MidiSong_TCallback(this);
+    transport_->attachCallback(tcallback_);
 
     track_load();
 
@@ -1196,6 +1198,12 @@ void ML_CTL_MidiSong::Close()
         pianorollctrl_->track_set(-1);
     }
 
+    // Before the mixer they are attached to: ~Listener is what detaches them.
+    for (unsigned int i=0; i<mixerlisteners_.size(); i++)
+        delete mixerlisteners_[i];
+    mixerlisteners_.clear();
+    mixerlistenport_=-1;
+
     // Each of these is guarded by a non-NULL test elsewhere (poll(), mixer_get(),
     // the transpose handlers), so they must be cleared as well as freed: a Load()
     // that fails part way leaves this object reachable with the song already gone.
@@ -1205,6 +1213,11 @@ void ML_CTL_MidiSong::Close()
     mixer_=NULL;
     delete transport_;
     transport_=NULL;
+
+    // After the transport: ~Transport stops playback, and stopping can still fan
+    // events out to an attached callback.
+    delete tcallback_;
+    tcallback_=NULL;
 }
 
 void ML_CTL_MidiSong::play_start()
@@ -1540,12 +1553,30 @@ void ML_CTL_MidiSong::mixer_listen()
     TSE3::MixerPort *mp=mixer_get();
     if (!mp) return;
 
+    // Play() calls this every time. Attaching a fresh set of listeners on each
+    // one left the old ones attached as well - nothing deletes them, and
+    // ~Listener is the only thing that detaches - so a volume change fanned out
+    // to sixteen callbacks per play so far.
+    const int port=transport_->filter()->port();
+    if (!mixerlisteners_.empty())
+    {
+        if (port==mixerlistenport_) return;
+
+        // the output port changed under us, so the old listeners are on the
+        // wrong MixerPort and have to go
+        for (unsigned int i=0; i<mixerlisteners_.size(); i++)
+            delete mixerlisteners_[i];
+        mixerlisteners_.clear();
+    }
+
     for (int i=0; i<16; i++)
     {
         ML_CTL_MidiSong_MixerChannelListener *ccb=new ML_CTL_MidiSong_MixerChannelListener(this, i);
 
         ccb->attachTo((*mp)[i]);
+        mixerlisteners_.push_back(ccb);
     }
+    mixerlistenport_=port;
 }
 
 void ML_CTL_MidiSong::OnPlay(wxCommandEvent& event)

@@ -39,6 +39,7 @@ using namespace std;
 
 class ML_CTL_MidiSong;
 class ML_CTL_MidiTrack_Notes;
+class ML_CTL_MidiSong_TCallback;
 
 /**
  * @class ML_CTL_MidiTrack_Activity
@@ -380,6 +381,12 @@ private:
 
     int tracksolo_;
     vector<trackinfo_t> trackinfo_;
+
+    // Neither TSE3's Transport nor its Notifier owns what is attached to it, so
+    // both of these have to be owned here and freed in Close().
+    ML_CTL_MidiSong_TCallback *tcallback_;
+    vector<ML_CTL_MidiSong_MixerChannelListener*> mixerlisteners_;
+    int mixerlistenport_;
 
     DECLARE_EVENT_TABLE()
 };
