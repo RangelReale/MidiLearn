@@ -78,17 +78,23 @@ class SearchTraverser : public wxDirTraverser
 {
 public:
     SearchTraverser(const wxString &search, wxListCtrl *listctrl) :
-        search_(search), listctrl_(listctrl) { search_.MakeUpper(); }
+        search_(search), listctrl_(listctrl), dirs_(0) { search_.MakeUpper(); }
 
     virtual wxDirTraverseResult OnFile(const wxString& filename)
     {
-        //m_files.Add(filename);
+        wxFileName fn(filename);
+
+        // Only offer what the app can actually open, the same set as the Open
+        // dialog's filter. Song directories are full of covers, .txt and archives.
+        const wxString ext=fn.GetExt().Upper();
+        if (ext!=wxT("MID") && ext!=wxT("KAR"))
+            return wxDIR_CONTINUE;
+
         wxString cfn(filename);
         cfn.MakeUpper();
         if (cfn.Contains(search_))
         {
             wxSafeYield();
-            wxFileName fn(filename);
             long newi=listctrl_->InsertItem(listctrl_->GetItemCount(), fn.GetFullName());
             if (newi!=-1)
                 listctrl_->SetItem(newi, 1, fn.GetPath());
@@ -98,13 +104,19 @@ public:
 
     virtual wxDirTraverseResult OnDir(const wxString& WXUNUSED(dirname))
     {
-        wxSafeYield();
+        // Yielding on every directory dominated the search on a large tree; once
+        // in a while is enough to keep the dialog painting.
+        if ((++dirs_ % YIELD_EVERY) == 0)
+            wxSafeYield();
         return wxDIR_CONTINUE;
     }
 
 private:
+    static const int YIELD_EVERY = 32;
+
     wxString search_;
     wxListCtrl *listctrl_;
+    int dirs_;
 };
 
 
@@ -118,7 +130,23 @@ void DLG_ML_Search::DoSearch(const wxString &stext)
 
     resultctrl->DeleteAllItems();
 
-    wxDir spath(wxConfigBase::Get()->Read(wxT("defdir"), wxEmptyString));
+    // With no default directory set -- which is the state on a first run -- wxDir
+    // asserts in a debug build and finds nothing at all in a release one.
+    const wxString defdir=wxConfigBase::Get()->Read(wxT("defdir"), wxEmptyString);
+    wxDir spath(defdir);
+    if (!spath.IsOpened())
+    {
+        searchctrl->Enable(true);
+        resultctrl->Enable(true);
+        searchctrl->SetFocus();
+
+        wxMessageBox(defdir.IsEmpty()
+            ? wxT("No default song path is set. Choose one from File > Default song path.")
+            : wxString::Format(wxT("Cannot open the default song path: %s"), defdir.c_str()),
+            wxT("Search"), wxOK|wxICON_INFORMATION, this);
+        return;
+    }
+
     SearchTraverser st(stext, resultctrl);
     spath.Traverse(st);
 
