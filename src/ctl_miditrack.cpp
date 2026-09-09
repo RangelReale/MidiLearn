@@ -1343,14 +1343,16 @@ void ML_CTL_MidiSong::trackinfo_enabled_set(int channel, bool enabled)
     if (enabled==trackinfo_[channel].enabled) return;
 
     trackinfo_[channel].enabled=enabled;
-    if (transport_ && transport_->status() != TSE3::Transport::Resting)
+
+    TSE3::MixerPort *mp=mixer_get();
+    if (mp && transport_ && transport_->status() != TSE3::Transport::Resting)
     {
         if (!enabled)
         {
             if (trackinfo_[channel].defvolume==-1)
-                trackinfo_[channel].defvolume=(*mixer_get())[channel]->volume();
-            if ((*mixer_get())[channel]->volume()!=0)
-                (*mixer_get())[channel]->setVolume(0);
+                trackinfo_[channel].defvolume=(*mp)[channel]->volume();
+            if ((*mp)[channel]->volume()!=0)
+                (*mp)[channel]->setVolume(0);
         }
         else
         {
@@ -1358,8 +1360,8 @@ void ML_CTL_MidiSong::trackinfo_enabled_set(int channel, bool enabled)
             if (trackinfo_[channel].volpct>-1)
                 trackinfo_[channel].volume=(int)((trackinfo_[channel].volpct/100.0)*(float)trackinfo_[channel].defvolume);
 
-            if ((*mixer_get())[channel]->volume()!=trackinfo_[channel].volume)
-                (*mixer_get())[channel]->setVolume(trackinfo_[channel].volume);
+            if ((*mp)[channel]->volume()!=trackinfo_[channel].volume)
+                (*mp)[channel]->setVolume(trackinfo_[channel].volume);
         }
     }
 }
@@ -1377,22 +1379,25 @@ void ML_CTL_MidiSong::trackinfo_volume_set(int channel, int volpct)
     if (volpct==trackinfo_[channel].volpct) return;
 
     trackinfo_[channel].volpct=volpct;
-    if (trackinfo_[channel].enabled &&
+
+    TSE3::MixerPort *mp=mixer_get();
+    if (mp &&
+        trackinfo_[channel].enabled &&
         transport_ &&
         transport_->status() != TSE3::Transport::Resting)
     {
         if (volpct>-1)
         {
             if (trackinfo_[channel].defvolume==-1)
-                trackinfo_[channel].defvolume=(*mixer_get())[channel]->volume();
+                trackinfo_[channel].defvolume=(*mp)[channel]->volume();
             trackinfo_[channel].volume=(int)((volpct/100.0)*(float)trackinfo_[channel].defvolume);
-            if ((*mixer_get())[channel]->volume()!=trackinfo_[channel].volume)
-                (*mixer_get())[channel]->setVolume(trackinfo_[channel].volume);
+            if ((*mp)[channel]->volume()!=trackinfo_[channel].volume)
+                (*mp)[channel]->setVolume(trackinfo_[channel].volume);
         }
         else
         {
-            if ((*mixer_get())[channel]->volume()!=trackinfo_[channel].defvolume)
-                (*mixer_get())[channel]->setVolume(trackinfo_[channel].defvolume);
+            if ((*mp)[channel]->volume()!=trackinfo_[channel].defvolume)
+                (*mp)[channel]->setVolume(trackinfo_[channel].defvolume);
             trackinfo_[channel].volume=-1;
         }
     }
@@ -1499,18 +1504,32 @@ void ML_CTL_MidiSong::shownotes(int track)
 
 TSE3::MixerPort *ML_CTL_MidiSong::mixer_get()
 {
-    if (!mixer_) return NULL;
-    if (transport_->filter()->port()<0) return NULL;
-    return (*mixer_)[ML_CTL_Control::control()->scheduler_get()->numberToIndex(transport_->filter()->port())];
+    if (!mixer_ || !transport_) return NULL;
+
+    const int port=transport_->filter()->port();
+    if (port<0) return NULL;
+
+    // numberToIndex() silently falls back to 0 for a port number it does not
+    // recognise - a device saved in the registry and since unplugged - so the
+    // index has to be checked against the count the Mixer was built with. With
+    // no output ports at all, index 0 is out of range too.
+    TSE3::MidiScheduler *sch=ML_CTL_Control::control()->scheduler_get();
+    const size_t index=sch->numberToIndex(port);
+    if (index>=sch->numPorts()) return NULL;
+
+    return (*mixer_)[index];
 }
 
 void ML_CTL_MidiSong::mixer_listen()
 {
+    TSE3::MixerPort *mp=mixer_get();
+    if (!mp) return;
+
     for (int i=0; i<16; i++)
     {
         ML_CTL_MidiSong_MixerChannelListener *ccb=new ML_CTL_MidiSong_MixerChannelListener(this, i);
 
-        ccb->attachTo((*mixer_get())[i]);
+        ccb->attachTo((*mp)[i]);
     }
 }
 
@@ -1619,13 +1638,18 @@ void ML_CTL_MidiSong::OnPaint(wxPaintEvent& event)
 
 void ML_CTL_MidiSong::int_channel_volchanged(int channel)
 {
-    if (!trackinfo_[channel].enabled && (*mixer_get())[channel]->volume()!=0)
+    if (channel<0 || channel>=16) return;
+
+    TSE3::MixerPort *mp=mixer_get();
+    if (!mp) return;
+
+    if (!trackinfo_[channel].enabled && (*mp)[channel]->volume()!=0)
     {
         trackinfo_[channel].enabled=true;
         trackinfo_[channel].defvolume=-1;
         trackinfo_enabled_set(channel, false);
     }
-    else if (trackinfo_[channel].volpct!=-1 && (*mixer_get())[channel]->volume()!=trackinfo_[channel].volume)
+    else if (trackinfo_[channel].volpct!=-1 && (*mp)[channel]->volume()!=trackinfo_[channel].volume)
     {
         int cvol=trackinfo_[channel].volpct;
         trackinfo_[channel].volpct=-1;

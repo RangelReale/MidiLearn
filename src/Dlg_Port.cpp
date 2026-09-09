@@ -83,15 +83,17 @@ bool DLG_ML_Port::TransferDataFromWindow()
 
     wxListBox *portsctrl=(wxListBox*)FindWindow(ID_PORTS);
 
-    port_=-1;
-    for (int i=0; i<(int)ML_CTL_Control::control()->scheduler_get()->numPorts(); i++)
+    const int sel=portsctrl->GetSelection();
+    if (sel==wxNOT_FOUND ||
+        sel>=(int)ML_CTL_Control::control()->scheduler_get()->numPorts())
     {
-        if (i==portsctrl->GetSelection())
-        {
-            port_=ML_CTL_Control::control()->scheduler_get()->portNumber(i);
-            break;
-        }
+        // Accepting the dialog with port_=-1 left the mixer with no port to work
+        // on, and the next Play dereferenced a NULL MixerPort.
+        wxMessageBox(wxT("No port selected"), wxT("Error"), wxOK|wxICON_ERROR);
+        return false;
     }
+
+    port_=ML_CTL_Control::control()->scheduler_get()->portNumber(sel);
 
     return true;
 }
