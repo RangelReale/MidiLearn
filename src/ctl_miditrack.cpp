@@ -404,7 +404,7 @@ void ML_CTL_MidiTrack_Notes::OnPaint(wxPaintEvent& event)
                             //colorrangeset(dc, (1/12)*(ins_midievent->data.data1%12), ins_midievent->data.data1/12);
                             //colorrangeset(dc, (1/12)*(ins_midievent->data.data1/12), ins_midievent->data.data1%12);
                             //colorrangeset(dc, 100, ins_midievent->data.data1%12);
-                            dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(ML_CTL_Control::control()->notecolor_get(ins_midievent->data.data1%12)));
+                            dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(ML_CTL_Control::control()->notecolor_get(ins_midievent->data.data1)));
 
                             dc.DrawRectangle(wxRect(dpos, 0, 40, GetClientRect().GetHeight()));
                         }
@@ -566,7 +566,7 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
                 {
                     dc.SetBrush(*wxWHITE_BRUSH);
                 }
-                dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(ML_CTL_Control::control()->notecolor_get(i%12)));
+                dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(ML_CTL_Control::control()->notecolor_get(i)));
 
                 dc.DrawRectangle(dx+2, GetClientRect().GetHeight()-15, /*dx+*/note_width()-2, GetClientRect().GetHeight());
 
@@ -701,18 +701,18 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
 /*
                                 if (note_isblack(*di))
                                 {
-                                    dc.SetPen(*wxThePenList->FindOrCreatePen(ML_CTL_Control::control()->notecolor_get(*di%12), 7, wxSOLID));
+                                    dc.SetPen(*wxThePenList->FindOrCreatePen(ML_CTL_Control::control()->notecolor_get(*di), 7, wxSOLID));
                                     dc.SetBrush(*wxBLACK_BRUSH);
                                 }
                                 else
                                 {
                                     dc.SetPen(*wxBLACK_PEN);
-                                    dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(ML_CTL_Control::control()->notecolor_get(*di%12)));
+                                    dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(ML_CTL_Control::control()->notecolor_get(*di)));
 
                                 }
 */
                                 dc.SetPen(*wxThePenList->FindOrCreatePen(*wxBLACK, (note_isblack(*di)?2:1), wxSOLID));
-                                dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(ML_CTL_Control::control()->notecolor_get(*di%12)));
+                                dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(ML_CTL_Control::control()->notecolor_get(*di)));
                                 dc.DrawRectangle(wxRect(cnpos, chendpos, note_width(), chpos-chendpos));
 
                                 wxString nds(ML_CTL_Control::control()->note_get(*di).c_str(), wxConvUTF8);

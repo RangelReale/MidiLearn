@@ -9,6 +9,10 @@
  * state; the widget classes hold the state and call these.
  */
 
+/** Pitch class 0-11 of any note, negatives included. C++ % keeps the sign of the
+ *  dividend, so note%12 is not this. */
+int ml_pitch_class(int note);
+
 /** Whether a pitch class is a black key. Accepts any int: negative note numbers
  *  arise from transposing a low track down. */
 bool ml_note_isblack(int note);

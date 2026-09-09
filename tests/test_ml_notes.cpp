@@ -45,6 +45,32 @@ static void check_str(const std::string &got, const std::string &want,
 #define CHECK_EQ(e, w)   check_eq((e), (w), #e, __LINE__)
 #define CHECK_STR(e, w)  check_str((e), (w), #e, __LINE__)
 
+static void test_pitch_class()
+{
+    for (int n = 0; n < 12; n++)
+        CHECK_EQ(ml_pitch_class(n), n);
+
+    CHECK_EQ(ml_pitch_class(12), 0);
+    CHECK_EQ(ml_pitch_class(60), 0);
+    CHECK_EQ(ml_pitch_class(61), 1);
+    CHECK_EQ(ml_pitch_class(127), 7);
+
+    // negatives wrap upward rather than staying negative, which is the whole
+    // point: note%12 would give -1, -2, -11 here.
+    CHECK_EQ(ml_pitch_class(-1), 11);
+    CHECK_EQ(ml_pitch_class(-2), 10);
+    CHECK_EQ(ml_pitch_class(-11), 1);
+    CHECK_EQ(ml_pitch_class(-12), 0);
+    CHECK_EQ(ml_pitch_class(-13), 11);
+
+    // always a usable table index
+    for (int n = -60; n <= 200; n++)
+    {
+        CHECK(ml_pitch_class(n) >= 0);
+        CHECK(ml_pitch_class(n) < 12);
+    }
+}
+
 static void test_note_isblack()
 {
     // one octave from C
@@ -195,6 +221,7 @@ static void test_most_used_channel()
 
 int main()
 {
+    test_pitch_class();
     test_note_isblack();
     test_range();
     test_white_keys();

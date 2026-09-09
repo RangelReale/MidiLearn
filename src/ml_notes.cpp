@@ -2,13 +2,17 @@
 
 #include <sstream>
 
+int ml_pitch_class(int note)
+{
+    // Floor-mod: note is a transposed pitch and can be negative, and C++ % keeps
+    // the sign of the dividend, so a plain note%12 is not a pitch class.
+    return ((note%12)+12)%12;
+}
+
 bool ml_note_isblack(int note)
 {
-    // Floor-mod, because note is a transposed pitch and can be negative: C++ %
-    // keeps the sign of the dividend, so a plain note%12 matched nothing and
-    // every negative note came back white.
     bool isblack=false;
-    switch (((note%12)+12)%12)
+    switch (ml_pitch_class(note))
     {
     case 1: case 3: case 6: case 8: case 10:
         isblack=true;

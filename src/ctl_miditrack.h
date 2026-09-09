@@ -448,7 +448,9 @@ public:
     notedisplay_t notedisplay_get() { return notedisplay_; }
     void notedisplay_set(notedisplay_t n) { notedisplay_=n; }
 
-    wxColor notecolor_get(unsigned short note) { if (!notecolorinit_) init_notecolors(); return notecolor_[note]; }
+    // Takes any note number: the table is indexed by pitch class, and leaving that
+    // to the callers meant an unbounded index one forgotten %12 away.
+    wxColor notecolor_get(int note) { if (!notecolorinit_) init_notecolors(); return notecolor_[ml_pitch_class(note)]; }
 
     static void DrawTextOutline(wxDC &dc, const wxString &text, int x, int y, int outlinesize);
     static ML_CTL_Control *control();
