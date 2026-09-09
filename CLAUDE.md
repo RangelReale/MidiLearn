@@ -10,7 +10,9 @@ mixer volume) and turn on "Notes"; the app renders that track as a scrolling pia
 with karaoke lyrics while the rest of the song plays out to a MIDI output port. It never
 synthesises audio — it only schedules MIDI events to an external port/synth.
 
-`README` says 0.4; `MidiLearnApp.cpp:28` and the installer say 0.5. The README is stale.
+Version 0.5. `ML_VERSION` in `MidiLearnApp.h` is the only copy in the source (the frame
+title and the About box both format it); `release/win32/midilearn.iss` carries its own for
+the installer name.
 
 ## Building
 
@@ -32,9 +34,9 @@ paths are passed at configure time.
   This is what the deleted `cmake/modules/FindTSE3.cmake` used to do.
 
 **TSE3 must be the patched fork** `https://github.com/RangelReale/tse3` — three separate
-reasons, all load-bearing: `ctl_miditrack.cpp:1210` calls
+reasons, all load-bearing: `ctl_miditrack.cpp:1157` calls
 `transport_->filter()->setTransposeIgnoreChannel(9)`, which stock 0.3.1 lacks;
-`ctl_miditrack.cpp:955-983` implements `TransportCallback` with the fork's `MidiEvent`
+`ctl_miditrack.cpp:855-887` implements `TransportCallback` with the fork's `MidiEvent`
 signature rather than stock's `MidiCommand`; and stock's Win32 `timeSetEvent` callback
 takes `DWORD` where x64 needs `DWORD_PTR`, so it does not build 64-bit.
 
@@ -58,17 +60,31 @@ FetchContent override — `-DFETCHCONTENT_SOURCE_DIR_TSE3=M:/prog/src/tse3` or
 
 Both 32- and 64-bit build; x64 is the VS default and is what the pinned TSE3 was fixed for.
 
-The only target is `midilearn` (lowercase). Output lands in `build/bin/<Config>/`;
+Targets are `midilearn` (lowercase), the `ml_notes` static library it links, and
+`test_ml_notes`. The executable lands in `build/bin/<Config>/`;
 `run.bat` launches the RelWithDebInfo build and **must be run from the repo root** (see
 Runtime data). Sources are listed explicitly in `src/CMakeLists.txt` — there is no glob, so
 adding a `.cpp`/`.h` means editing that list.
 
-**There are no tests, linters, formatters, or CI** — no `enable_testing()`/`add_test()`, no
-`tests/`, no `.clang-format`/`.clang-tidy`/`.editorconfig`, no `.github/`. Verification is
-manual: build, run from the repo root, open a `.mid`/`.kar`, enable a track, press Play.
+`tests/` holds a unit-test suite for the pure note and pitch logic in `src/ml_notes.{h,cpp}`
+— black-key detection, the transposed and clipped key range, the white-key count and column
+index, the solfège name, the most-used-channel pick. `ml_notes` is a static library that
+links neither wxWidgets nor TSE3, so the suite builds and runs in about a second:
 
-`release/win32/midilearn.iss` (Inno Setup) is stale post-CMake-conversion: it still expects
-the binary at `bin\Release\midilearn.exe`. `site/` is an archived project page, not built.
+```sh
+ctest --test-dir build -C RelWithDebInfo   # Windows; drop -C on Linux
+```
+
+Plain asserts and an exit code, no framework. Anything needing a window, a MIDI port or a
+`Song` is **not** covered, so the rest is still manual: build, run from the repo root, open
+a `.mid`/`.kar`, enable a track, press Play.
+
+There are still **no linters, formatters or CI** — no `.clang-format`/`.clang-tidy`/
+`.editorconfig`, no `.github/`.
+
+`release/win32/midilearn.iss` (Inno Setup) sources the binary from
+`buildin\RelWithDebInfo\midilearn.exe`, matching the documented build. `site/` is an
+archived project page, not built.
 
 ## Runtime data and configuration
 
@@ -76,12 +92,12 @@ the binary at `bin\Release\midilearn.exe`. `site/` is an archived project page, 
 by `TSE3::Ins::CakewalkInstrumentFile` for the 128 General MIDI patch names. It is loaded
 from `ML_CTL_Control`'s constructor, which runs at **static-init time** — before
 `MidiLearnApp::OnInit` — because `control()` returns the address of the file-scope global
-`control_root` (`ctl_miditrack.cpp:1677`). A failure there is not recoverable from app code —
+`control_root` (`ctl_miditrack.cpp:1655`). A failure there is not recoverable from app code —
 a release build that cannot find the file **segfaults before `main()`**, with no window and no
 message.
 
 The path is assembled by string-literal concatenation across a preprocessor conditional
-(`ctl_miditrack.cpp:1611`): debug builds prepend `"../../"` to climb out of
+(`ctl_miditrack.cpp:1619`): debug builds prepend `"../../"` to climb out of
 `build/bin/<Config>/` (which resolves against `build/src/`, the VS debugger's working
 directory), release builds resolve `data/Standard.ins` against the CWD. That is why
 `run.bat` must start from the repo root, and why the installer ships `data\` beside the exe
@@ -97,8 +113,9 @@ first-run state is outside the repo. Two keys only: `port` and `defdir`.
 
 ## Architecture
 
-`ctl_miditrack.{h,cpp}` is essentially the whole application — ~2,160 of ~2,750 LOC. The
-split is by class, not by file. **The widget tree *is* the object model**: there are no
+`ctl_miditrack.{h,cpp}` is essentially the whole application — ~2,170 of ~3,160 LOC, the
+rest being the dialogs, the app/frame shell, `ml_notes` and the tests. The split is by
+class, not by file. **The widget tree *is* the object model**: there are no
 separate model classes, and children reach their owner by upcasting `GetParent()`
 (`ML_CTL_MidiTrack_NotesRoot` exists solely to shift that parent-walk by one level).
 
@@ -120,16 +137,27 @@ and exactly one `ML_CTL_MidiSong`. Dispatch is classic static event tables
 **Track identity is inferred, not read.** `ML_CTL_MidiTrack::track_set()` derives the
 program from the track's *first* `ProgramChange` and the channel from its *most-used*
 channel; all mixing and muting keys off that inferred channel. `create_track()` also
-**skips any track with fewer than 30 NoteOn events** (`ctl_miditrack.cpp:1122`), which is
+**skips any track with fewer than 30 NoteOn events** (`ctl_miditrack.cpp:1022`), which is
 why the on-screen track count does not match the file's.
 
 ### Threading — the easiest thing to break
 
 - `ML_CTL_MidiSong_Player` (a `wxThread`) loops calling `midisong_->poll()` every ~1 ms
-  (`ctl_miditrack.cpp:934-946`); TSE3 requires this host-driven polling.
+  (`ctl_miditrack.cpp:835-847`); TSE3 requires this host-driven polling.
 - Access to the TSE3 `Song` is serialised by the `wxCriticalSection songcs_` via
   `songget_begin()`/`songget_end()`. Take it through the RAII guard
-  `ML_CTL_MidiSong_AutoSong`, not by hand.
+  `ML_CTL_MidiSong_AutoSong`, not by hand. `wxCriticalSection` is **not recursive on every
+  platform**, so a method that already holds it must not call one that takes it — this is
+  why `Pause()` is a thin wrapper over `pause_locked()`, which requires the lock and is
+  what `Rew()`, `FF()` and `tempo_step()` call.
+- Do **not** hold `songcs_` across `player_->Delete()`. `Delete()` blocks until the thread
+  exits and the thread's own loop takes the lock, so that deadlocks; `play_end()` is
+  deliberately unlocked.
+- The paint handlers take the lock only for the clock read and then walk the track
+  unlocked. That is intentional: `Transport::poll()` mutates only transport and scheduler
+  state and reads the `Song` through its own iterator, so the walk is read-only against
+  read-only, and widening the lock would block the 1 ms poll for the length of every
+  repaint.
 - `ML_CTL_MidiSong_TCallback::Transport_MidiOut` fires **on that worker thread** and fans
   note-ons to `activity(channel)` and text-meta events to `lyrics_activity()`, de-duping per
   channel via `lastclock_[16]`. Both call `Refresh()` on wx windows, and the
@@ -138,17 +166,30 @@ why the on-screen track count does not match the file's.
 - A 250 ms `wxTimer` drives `activity_idle()` so the roll keeps scrolling through silence.
 - `ML_CTL_MidiSong_MixerChannelListener` is attached to all 16 mixer channels because the
   MIDI file's own volume CCs would otherwise undo the user's mute; it re-applies intent.
+  `ML_CTL_MidiSong` owns the 16 listeners and the `ML_CTL_MidiSong_TCallback` and frees
+  them in `Close()` — TSE3 owns neither (`~Transport` does not delete callbacks, and
+  `~Listener` is the only thing that detaches). `mixer_listen()` is idempotent and
+  re-attaches only when the output port changed.
 
 ### Transpose, and the display/output invariant
 
-Transpose goes through `transport_->filter()->setTranspose()` (`ctl_miditrack.cpp:1534-1556`),
-with channel 9 excluded by `setTransposeIgnoreChannel(9)` (`:1210`) so drum note numbers —
+Transpose goes through `transport_->filter()->setTranspose()` (`ctl_miditrack.cpp:1538-1566`),
+with channel 9 excluded by `setTransposeIgnoreChannel(9)` (`:1157`) so drum note numbers —
 percussion selectors, not pitches — are not shifted.
 
 The views deliberately do **not** apply transpose themselves. They push each raw event
-through `transport_->filter()->filter(...)` before drawing (`:358`, `:674`) and add
-`filter()->transpose()` to the key range (`:532`, `:586`, `:793`). This is what guarantees
-what is on screen matches what is sent to the port — new note-drawing code must preserve it.
+through `transport_->filter()->filter(...)` before drawing (`:355`, `:592`), and the piano
+roll's key range comes from `range_lo()`/`range_hi()` (`:669-677`), which add
+`filter()->transpose()` and clip to 0..127. This is what guarantees what is on screen
+matches what is sent to the port — new note-drawing code must preserve it.
+
+`range_lo()`/`range_hi()` are the single definition of the visible range: `note_pos()`,
+`notes_white_get()` and both painting loops all go through them, because when the count and
+the positions came from different ranges the layout drifted as the song was transposed.
+`notes_white_get()` caches its count against the transpose it was computed for. The pure
+arithmetic lives in `ml_notes` and is unit-tested; the pitch class is
+`ml_pitch_class()` (a floor-mod — `note%12` is signed in C++ and wrong for the negative
+notes a downward transpose produces).
 
 Every custom view uses the same anti-flicker recipe: `SetBackgroundStyle(wxBG_STYLE_CUSTOM)`,
 an empty `OnEraseBackground`, and `wxAutoBufferedPaintDC` in `OnPaint`.
@@ -156,7 +197,7 @@ an empty `OnEraseBackground`, and `wxAutoBufferedPaintDC` in `OnPaint`.
 ### Platform split
 
 Compile-time `#ifdef` on a single member, not a runtime backend. In `ctl_miditrack.h`
-(lines 28-33 and 436-441): `TSE3::Plt::Win32MidiScheduler` on Windows,
+(lines 29-34 and 461-466): `TSE3::Plt::Win32MidiScheduler` on Windows,
 `TSE3::Plt::AlsaMidiScheduler` on Linux; the link-time half (`winmm` / `asound`) is added
 to the fetched `tse3` target in the top-level `CMakeLists.txt`. Changes must be mirrored in
 all of those places.
@@ -179,8 +220,8 @@ lightly exercised — HEAD (`ce8a1cf`) is a one-line `alsa` → `asound` link-na
 - Literals wrapped in `wxT()`/`_()`. String conversion is not uniform: `wxConvUTF8`
   generally, but lyrics and `MidiFileImport` use `wxConvISO8859_1`.
 - Debug-only code is gated on `#ifndef NDEBUG`, **not** `__WXDEBUG__` — commit `9b29135`
-  removed the latter as unreliable under wx3/CMake, though a stale `//__WXDEBUG__` comment
-  on one `#endif` still misleads. Use `#ifndef NDEBUG` for new debug branches.
+  removed the latter as unreliable under wx3/CMake. Use `#ifndef NDEBUG` for new debug
+  branches.
 - Dead Code::Blocks wizard leftovers, to ignore rather than "fix":
   `#ifdef WX_PRECOMP → wx_pch.h` (that header does not exist here) and
   `#ifdef __BORLANDC__ / #pragma hdrstop`.
