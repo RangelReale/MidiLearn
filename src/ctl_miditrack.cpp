@@ -454,7 +454,7 @@ ML_CTL_MidiTrack_PianoRoll::ML_CTL_MidiTrack_PianoRoll(wxWindow* parent, wxWindo
     const wxSize& size, long style, const wxValidator& validator,
     const wxString& name) :
     wxPanel(parent, id, pos, size, style, name), track_(-1), notemin_(-1), notemax_(-1),
-    notes_white_(0), notes_black_(0), lastactivity_(0)
+    notes_white_(0), notes_white_transpose_(0), lastactivity_(0)
 {
     SetBackgroundStyle(wxBG_STYLE_CUSTOM);
 }
@@ -499,11 +499,12 @@ void ML_CTL_MidiTrack_PianoRoll::track_set(int t)
     if (note_isblack(notemin_)) notemin_--;
     if (note_isblack(notemax_)) notemax_++;
 
-    notes_white_=notes_black_=0;
-    for (int i=notemin_; i<=notemax_; i++)
-    {
-        if (note_isblack(i)) notes_black_++; else notes_white_++;
-    }
+    // Keep the range inside real MIDI notes: without this notemin_ reaches -2 for
+    // a track containing note 0.
+    if (notemin_<0) notemin_=0;
+    if (notemax_>127) notemax_=127;
+
+    notes_white_=0; // recounted on demand, for whatever the transpose is then
 
     Refresh();
 }
@@ -542,10 +543,8 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
         //float npos=GetClientRect().GetWidth()/(float)(nmax-nmin+1);
         // draw white notes
         int dx;
-        for (int i=notemin_+song_get()->transport_get()->filter()->transpose(); i<=notemax_+song_get()->transport_get()->filter()->transpose(); i++)
+        for (int i=range_lo(); i<=range_hi(); i++)
         {
-            if (i<0 || i>127) continue;
-
             wxString nds(ML_CTL_Control::control()->note_get(i).c_str(), wxConvUTF8);
             //nds.Replace(wxT("-"), wxT(""), true);
             //nds.RemoveLast();
@@ -596,10 +595,8 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
         dc.SetBrush(*wxBLACK_BRUSH);
         //dc.SetPen(*wxTRANSPARENT_PEN);
         int bnw=note_width()/3;
-        for (int i=notemin_+song_get()->transport_get()->filter()->transpose(); i<=notemax_+song_get()->transport_get()->filter()->transpose(); i++)
+        for (int i=range_lo(); i<=range_hi(); i++)
         {
-            if (i<0 || i>127) continue;
-
             wxString nds(ML_CTL_Control::control()->note_get(i).c_str(), wxConvUTF8);
             //nds.Replace(wxT("-"), wxT(""), true);
             //nds.RemoveLast();
@@ -790,8 +787,11 @@ void ML_CTL_MidiTrack_PianoRoll::OnPaint(wxPaintEvent& event)
 
 bool ML_CTL_MidiTrack_PianoRoll::note_isblack(int note)
 {
+    // Floor-mod, because note is a transposed pitch and can be negative: C++ %
+    // keeps the sign of the dividend, so a plain note%12 matched nothing and
+    // every negative note came back white.
     bool isblack=false;
-    switch (note%12)
+    switch (((note%12)+12)%12)
     {
     case 1: case 3: case 6: case 8: case 10:
         isblack=true;
@@ -800,10 +800,43 @@ bool ML_CTL_MidiTrack_PianoRoll::note_isblack(int note)
     return isblack;
 }
 
+// The visible key range: transposed, and clipped to real MIDI notes. note_pos(),
+// notes_white_get() and both painting loops have to agree on it, or the key
+// layout and the note columns drift apart as the song is transposed.
+int ML_CTL_MidiTrack_PianoRoll::range_lo()
+{
+    const int lo=notemin_+song_get()->transport_get()->filter()->transpose();
+    return lo<0?0:lo;
+}
+
+int ML_CTL_MidiTrack_PianoRoll::range_hi()
+{
+    const int hi=notemax_+song_get()->transport_get()->filter()->transpose();
+    return hi>127?127:hi;
+}
+
+// White keys across the current range. Cached, because note_width() is called
+// from inside the painting loops; the transpose it was counted for is kept so a
+// transpose invalidates it.
+int ML_CTL_MidiTrack_PianoRoll::notes_white_get()
+{
+    const int tr=song_get()->transport_get()->filter()->transpose();
+    if (notes_white_==0 || tr!=notes_white_transpose_)
+    {
+        int n=0;
+        for (int i=range_lo(); i<=range_hi(); i++)
+            if (!note_isblack(i)) n++;
+
+        notes_white_=(n<1?1:n); // never divide by zero in note_width()
+        notes_white_transpose_=tr;
+    }
+    return notes_white_;
+}
+
 int ML_CTL_MidiTrack_PianoRoll::note_pos(int note)
 {
     int nc=0;
-    for (int ctn=notemin_+song_get()->transport_get()->filter()->transpose(); ctn<note; ctn++)
+    for (int ctn=range_lo(); ctn<note; ctn++)
         if (!note_isblack(ctn)) nc++;
 
     bool isblack=(note_isblack(note));
@@ -817,7 +850,7 @@ int ML_CTL_MidiTrack_PianoRoll::note_pos(int note)
 float ML_CTL_MidiTrack_PianoRoll::note_width()
 {
     //return GetClientRect().GetWidth()/(float)(notemax_-notemin_+1);
-    return (float)GetClientRect().GetWidth()/(float)notes_white_;
+    return (float)GetClientRect().GetWidth()/(float)notes_white_get();
 }
 
 void ML_CTL_MidiTrack_PianoRoll::activity()

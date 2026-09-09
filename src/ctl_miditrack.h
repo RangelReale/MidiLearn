@@ -198,10 +198,13 @@ private:
     int note_pos(int note);
     float note_width();
 
+    int range_lo();
+    int range_hi();
+    int notes_white_get();
+
     int track_;
     int notemin_, notemax_;
-    int notes_white_;
-    int notes_black_;
+    int notes_white_, notes_white_transpose_;
     wxLongLong lastactivity_;
 
 
