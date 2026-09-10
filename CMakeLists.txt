@@ -42,7 +42,7 @@ FetchContent_Declare(wxWidgets
 
 FetchContent_Declare(tse3
   GIT_REPOSITORY https://github.com/RangelReale/tse3.git
-  GIT_TAG        fd4a9bc370d8471343c0e8bf6fa9e92767729390
+  GIT_TAG        34115812d190a10c334d1687abfa8b4d997936f6
   SOURCE_SUBDIR  src/tse3
 )
 
