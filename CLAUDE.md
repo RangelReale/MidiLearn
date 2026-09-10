@@ -33,12 +33,23 @@ paths are passed at configure time.
   library — so the top-level `CMakeLists.txt` adds `<src>` and `winmm`/`asound` itself.
   This is what the deleted `cmake/modules/FindTSE3.cmake` used to do.
 
-**TSE3 must be the patched fork** `https://github.com/RangelReale/tse3` — three separate
+**TSE3 must be the patched fork** `https://github.com/RangelReale/tse3` — four separate
 reasons, all load-bearing: `ctl_miditrack.cpp:1157` calls
 `transport_->filter()->setTransposeIgnoreChannel(9)`, which stock 0.3.1 lacks;
 `ctl_miditrack.cpp:855-887` implements `TransportCallback` with the fork's `MidiEvent`
-signature rather than stock's `MidiCommand`; and stock's Win32 `timeSetEvent` callback
-takes `DWORD` where x64 needs `DWORD_PTR`, so it does not build 64-bit.
+signature rather than stock's `MidiCommand`; stock's Win32 `timeSetEvent` callback
+takes `DWORD` where x64 needs `DWORD_PTR`, so it does not build 64-bit; and stock's
+`PhraseEdit::tidy()` **crashes on around 7% of real `.kar` files**, fixed in the fork by
+`3411581` (the pinned commit).
+
+That last one is worth knowing about, because it shapes what `Load()` can promise. When a
+track ends with the sustain pedal still held, stock `tidy()` scans past the end of its
+event vector looking for the pedal-up and erases at `end()`: a release build corrupts the
+vector and faults. An access violation is not a C++ exception, so the `try`/`catch` in
+`Load()` could not catch it and the app died with no message. With the fork pinned, what
+reaches that `catch` is a thrown `MidiFileImportError` for a genuinely malformed file, and
+it reports properly. Measured over a 72,007-file corpus: 28 of 400 sampled files crashed
+before, none after.
 
 ```sh
 # Windows — multi-config generator, so --config is required and CMAKE_BUILD_TYPE is ignored
@@ -83,7 +94,7 @@ There are still **no linters, formatters or CI** — no `.clang-format`/`.clang-
 `.editorconfig`, no `.github/`.
 
 `release/win32/midilearn.iss` (Inno Setup) sources the binary from
-`buildin\RelWithDebInfo\midilearn.exe`, matching the documented build. `site/` is an
+`build\bin\RelWithDebInfo\midilearn.exe`, matching the documented build. `site/` is an
 archived project page, not built.
 
 ## Runtime data and configuration
